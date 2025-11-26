@@ -7,6 +7,9 @@ on:
     - cron: '0 0 * * *'    # 每天 00:00 UTC 构建一次 Nightly
   workflow_dispatch:        # 手动触发
 
+permissions:
+  contents: write  # 允许创建/更新 release、上传文件
+
 concurrency:
   group: autobuild-${{ github.ref }}
   cancel-in-progress: true
@@ -15,27 +18,60 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  # 清理旧的 autobuild release assets，但保留 tag
-  cleanup-old-release:
+  # 第一步：准备 release（避免并发创建的竞态条件）
+  prepare-release:
     runs-on: ubuntu-latest
     steps:
-      - name: Delete old autobuild release assets
+      - name: Checkout dev branch
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+
+      - name: Create or update autobuild release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: autobuild
+          name: 'Antigravity Agent Nightly'
+          body: |
+            Nightly build from dev branch.
+            
+            🕐 Last updated: ${{ github.event.head_commit.timestamp }}
+            📦 Commit: ${{ github.sha }}
+            
+            ---
+            
+            ## 📥 下载安装
+            
+            ⚠️ **注意**：这是自动构建的测试版本，可能不稳定。建议普通用户使用 [正式发布版本](https://github.com/MonchiLin/antigravity-agent/releases/latest)。
+            
+            ### Windows
+            - **安装版**（推荐）: `Antigravity Agent_x.x.x_x64-setup.exe` - 支持自动更新
+            - **便携版**: `Antigravity-Agent-x86_64-Portable.zip` - 解压即用
+            
+            ### macOS
+            - **Apple Silicon**: `Antigravity Agent_aarch64.dmg`
+            - **Intel Mac**: `Antigravity Agent_x86_64.dmg`
+            
+            ### Linux
+            - **AppImage**: `antigravity-agent_x.x.x_amd64.AppImage` - 通用格式
+            - **Debian/Ubuntu**: `antigravity-agent_x.x.x_amd64.deb`
+            
+            ---
+            
+            🐛 如果发现问题，请[提交 Issue](https://github.com/MonchiLin/antigravity-agent/issues/new)
+          prerelease: true
+          draft: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        continue-on-error: true
-        run: |
-          # 只删除 release，不删除 tag（避免并发构建冲突）
-          # GitHub 会在删除 release 后保留 tag，第一个 build job 会重新创建 release
-          gh release delete autobuild --repo ${{ github.repository }} --yes || echo "No release to delete"
-          echo "✅ Cleaned up old autobuild release (tag preserved)"
 
+  # 第二步：并行构建（release 已存在，不会冲突）
   build:
-    needs: cleanup-old-release
+    needs: prepare-release  # 等待 release 准备好
     strategy:
       fail-fast: false
       matrix:
         include:
-          - platform: macos-13  # 修正：统一使用 macos-13
+          - platform: macos-13
             arch: aarch64
             runs-on: macos-13
             target: aarch64-apple-darwin
