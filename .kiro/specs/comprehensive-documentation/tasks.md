@@ -34,8 +34,8 @@
   - 提供下一步学习路径链接
   - _Requirements: 1.3_
 
-- [ ] 3. 编写使用文档（第二阶段 - 高优先级）
-- [ ] 3.1 创建完整使用手册 (docs/zh-CN/user-guide/user-guide.md)
+- [-] 3. 编写使用文档（第二阶段 - 高优先级）
+- [x] 3.1 创建完整使用手册 (docs/zh-CN/user-guide/user-guide.md)
   - 编写账户管理功能详解
   - 编写账户切换操作说明
   - 编写登录新账户流程
@@ -71,8 +71,8 @@
   - 添加最佳实践建议
   - _Requirements: 2.4_
 
-- [ ] 4. 编写开发文档（第三阶段 - 中优先级）
-- [ ] 4.1 创建系统架构文档 (docs/zh-CN/development/architecture.md)
+- [x] 4. 编写开发文档（第三阶段 - 中优先级）
+- [x] 4.1 创建系统架构文档 (docs/zh-CN/development/architecture.md)
   - 绘制系统整体架构图（使用 Mermaid）
   - 详细说明前端架构（React + TypeScript）
   - 详细说明后端架构（Rust + Tauri）
@@ -82,7 +82,7 @@
   - 添加目录结构说明
   - _Requirements: 3.1_
 
-- [ ] 4.2 创建开发环境搭建指南 (docs/zh-CN/development/development-guide.md)
+- [x] 4.2 创建开发环境搭建指南 (docs/zh-CN/development/development-guide.md)
   - 说明开发环境要求（Node.js、Rust、系统工具）
   - 提供依赖安装步骤
   - 说明项目克隆和初始化
@@ -92,7 +92,7 @@
   - 说明测试运行方法
   - _Requirements: 3.2_
 
-- [ ] 4.3 创建贡献指南 (docs/zh-CN/development/contributing.md)
+- [x] 4.3 创建贡献指南 (docs/zh-CN/development/contributing.md)
   - 说明贡献流程（Fork、分支、PR）
   - 说明分支管理策略
   - 说明提交信息规范
@@ -101,7 +101,7 @@
   - 添加社区行为准则
   - _Requirements: 3.3_
 
-- [ ] 4.4 创建代码规范文档 (docs/zh-CN/development/code-style.md)
+- [x] 4.4 创建代码规范文档 (docs/zh-CN/development/code-style.md)
   - 说明 TypeScript 代码规范
   - 说明 Rust 代码规范
   - 说明命名约定（变量、函数、文件）
@@ -111,8 +111,8 @@
   - 说明 Linter 和 Formatter 配置
   - _Requirements: 3.4_
 
-- [ ] 5. 编写进阶文档（第四阶段 - 中优先级）
-- [ ] 5.1 创建设计原理文档 (docs/zh-CN/advanced/design-principles.md)
+- [x] 5. 编写进阶文档（第四阶段 - 中优先级）
+- [x] 5.1 创建设计原理文档 (docs/zh-CN/advanced/design-principles.md)
   - 解释架构设计原则
   - 说明技术选型理由（Tauri vs Electron）
   - 说明跨平台实现策略
@@ -121,7 +121,7 @@
   - 说明可扩展性设计
   - _Requirements: 4.1_
 
-- [ ] 5.2 创建性能优化指南 (docs/zh-CN/advanced/performance.md)
+- [x] 5.2 创建性能优化指南 (docs/zh-CN/advanced/performance.md)
   - 说明性能分析方法和工具
   - 提供启动时间优化建议
   - 提供内存使用优化建议
@@ -130,7 +130,7 @@
   - 添加性能基准测试结果
   - _Requirements: 4.2_
 
-- [ ] 5.3 创建问题排查手册 (docs/zh-CN/advanced/troubleshooting.md)
+- [x] 5.3 创建问题排查手册 (docs/zh-CN/advanced/troubleshooting.md)
   - 说明日志查看方法（位置、格式、分析）
   - 列出常见错误和解决方案
   - 说明数据库问题排查
@@ -139,7 +139,7 @@
   - 提供调试技巧
   - _Requirements: 4.3_
 
-- [ ] 5.4 创建 FAQ 文档 (docs/zh-CN/advanced/faq.md)
+- [x] 5.4 创建 FAQ 文档 (docs/zh-CN/advanced/faq.md)
   - 收集和整理使用相关常见问题
   - 收集和整理开发相关常见问题
   - 收集和整理部署相关常见问题
