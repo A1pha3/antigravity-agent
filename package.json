@@ -10,7 +10,13 @@
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "check-docs": "node scripts/check-docs-quality.js",
+    "test:docs": "npm run test:docs:existence && npm run test:docs:sections && npm run test:docs:links && npm run test:docs:api",
+    "test:docs:existence": "node scripts/test-docs-existence.js",
+    "test:docs:sections": "node scripts/test-docs-sections.js",
+    "test:docs:links": "node scripts/test-docs-links.js",
+    "test:docs:api": "node scripts/test-api-coverage.js"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.0.5",
@@ -41,6 +47,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.0.0",
     "autoprefixer": "^10.4.16",
+    "glob": "^11.0.0",
     "postcss": "^8.4.32",
     "tailwindcss": "^3.4.18",
     "tailwindcss-animate": "^1.0.7",
