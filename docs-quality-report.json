@@ -21,177 +21,12 @@
   "incompleteDocs": [],
   "formatIssues": [
     {
-      "path": "docs/zh-CN/user-guide/user-guide.md",
-      "issues": [
-        {
-          "line": 196,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 199,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 202,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 508,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 516,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 519,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 570,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 577,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 580,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 585,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 588,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 591,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 600,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 606,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 609,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 614,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 620,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 623,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 628,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 635,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 638,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 647,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 650,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 653,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 661,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 664,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 671,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 679,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 685,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 691,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 735,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        }
-      ]
-    },
-    {
       "path": "docs/zh-CN/user-guide/configuration.md",
       "issues": [
         {
           "line": 1141,
           "message": "Missing space after heading marker",
           "severity": "error"
-        },
-        {
-          "line": 1360,
-          "message": "Trailing spaces",
-          "severity": "warning"
         }
       ]
     },
@@ -224,24 +59,9 @@
           "severity": "error"
         },
         {
-          "line": 824,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
           "line": 855,
           "message": "Missing space after heading marker",
           "severity": "error"
-        },
-        {
-          "line": 870,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 1025,
-          "message": "Trailing spaces",
-          "severity": "warning"
         }
       ]
     },
@@ -277,21 +97,6 @@
           "line": 872,
           "message": "Missing space after heading marker",
           "severity": "error"
-        },
-        {
-          "line": 1127,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        }
-      ]
-    },
-    {
-      "path": "docs/zh-CN/development/contributing.md",
-      "issues": [
-        {
-          "line": 772,
-          "message": "Trailing spaces",
-          "severity": "warning"
         }
       ]
     },
@@ -319,16 +124,6 @@
           "severity": "error"
         },
         {
-          "line": 741,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 745,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
           "line": 834,
           "message": "Missing space after heading marker",
           "severity": "error"
@@ -342,11 +137,6 @@
           "line": 992,
           "message": "Missing space after heading marker",
           "severity": "error"
-        },
-        {
-          "line": 1340,
-          "message": "Trailing spaces",
-          "severity": "warning"
         }
       ]
     },
@@ -419,11 +209,6 @@
           "severity": "error"
         },
         {
-          "line": 552,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
           "line": 1012,
           "message": "Missing space after heading marker",
           "severity": "error"
@@ -449,134 +234,14 @@
       "path": "docs/zh-CN/advanced/faq.md",
       "issues": [
         {
-          "line": 118,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 129,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 172,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 186,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 217,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 234,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
           "line": 282,
           "message": "Missing space after heading marker",
           "severity": "error"
         },
         {
-          "line": 308,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 323,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 337,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 360,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
           "line": 364,
           "message": "Missing space after heading marker",
           "severity": "error"
-        },
-        {
-          "line": 394,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 430,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 558,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 575,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 597,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 618,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 640,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 761,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 782,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 803,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 829,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 847,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 870,
-          "message": "Trailing spaces",
-          "severity": "warning"
-        },
-        {
-          "line": 889,
-          "message": "Trailing spaces",
-          "severity": "warning"
         }
       ]
     }
