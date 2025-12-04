@@ -585,15 +585,15 @@ use tracing::{info, debug, error, warn};
 #[tauri::command]
 async fn switch_account(account_id: String) -> Result<()> {
     info!(account_id = %account_id, "开始切换账户");
-    
+
     debug!("检查账户是否存在");
     // ...
-    
+
     if let Err(e) = result {
         error!(error = %e, "切换账户失败");
         return Err(e);
     }
-    
+
     info!("账户切换成功");
     Ok(())
 }
@@ -668,7 +668,7 @@ import { invoke } from '@tauri-apps/api/core';
 
 async function switchAccount(accountId: string) {
   console.log('IPC 调用: switch_antigravity_account', { accountId });
-  
+
   try {
     const result = await invoke('switch_antigravity_account', { accountId });
     console.log('IPC 响应:', result);
@@ -685,7 +685,7 @@ async function switchAccount(accountId: string) {
 ```typescript
 async function invokeWithTiming(command: string, args: any) {
   const start = performance.now();
-  
+
   try {
     const result = await invoke(command, args);
     const duration = performance.now() - start;
@@ -873,13 +873,13 @@ use antigravity_agent::*;
 async fn test_full_backup_restore_flow() {
     // 创建测试账户
     let account = create_test_account().await;
-    
+
     // 备份
     let backup_path = backup_account(&account).await.unwrap();
-    
+
     // 恢复
     let restored = restore_account(&backup_path).await.unwrap();
-    
+
     // 验证
     assert_eq!(account.id, restored.id);
 }
@@ -910,10 +910,10 @@ import { test, expect } from '@playwright/test';
 
 test('should switch account', async ({ page }) => {
   await page.goto('http://localhost:1420');
-  
+
   // 点击账户
   await page.click('[data-testid="account-item"]');
-  
+
   // 验证切换成功
   await expect(page.locator('[data-testid="current-account"]'))
     .toHaveText('Test Account');
@@ -1124,5 +1124,5 @@ npm run format
 
 ---
 
-**最后更新**: 2025-12-04  
+**最后更新**: 2025-12-04
 **文档版本**: 1.0.3

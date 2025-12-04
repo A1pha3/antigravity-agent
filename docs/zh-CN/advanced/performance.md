@@ -127,10 +127,10 @@ use std::time::Instant;
 #[instrument]
 async fn expensive_operation() {
     let start = Instant::now();
-    
+
     // 执行操作
     perform_work().await;
-    
+
     let duration = start.elapsed();
     info!("Operation completed in {:?}", duration);
 }
@@ -171,7 +171,7 @@ use sysinfo::{System, SystemExt, ProcessExt};
 fn monitor_performance() {
     let mut sys = System::new_all();
     sys.refresh_all();
-    
+
     if let Some(process) = sys.process(sysinfo::get_current_pid().unwrap()) {
         println!("Memory usage: {} KB", process.memory());
         println!("CPU usage: {}%", process.cpu_usage());
@@ -208,13 +208,13 @@ async fn setup() {
 async fn setup() {
     // 只初始化必要的服务
     init_database().await;
-    
+
     // 其他服务延迟初始化
     tokio::spawn(async {
         tokio::time::sleep(Duration::from_secs(2)).await;
         init_language_server().await;
     });
-    
+
     tokio::spawn(async {
         tokio::time::sleep(Duration::from_secs(5)).await;
         init_update_checker().await;
@@ -232,7 +232,7 @@ async fn parallel_init() {
         load_config(),
         setup_logger()
     );
-    
+
     // 处理结果
 }
 ```
@@ -268,11 +268,11 @@ lazy_static! {
 
 fn get_db_connection() -> Result<Connection> {
     let mut pool = DB_POOL.lock().unwrap();
-    
+
     if pool.is_none() {
         *pool = Some(Connection::open(get_db_path())?);
     }
-    
+
     Ok(pool.as_ref().unwrap().clone())
 }
 ```
@@ -303,13 +303,13 @@ use std::time::Instant;
 #[tokio::main]
 async fn main() {
     let start = Instant::now();
-    
+
     // 应用初始化
     setup().await;
-    
+
     let init_time = start.elapsed();
     tracing::info!("Application initialized in {:?}", init_time);
-    
+
     // 启动 Tauri
     tauri::Builder::default()
         .setup(|app| {
@@ -359,7 +359,7 @@ fn process_large_file(path: &Path) -> Result<()> {
         let large_data = std::fs::read(path)?;
         process(&large_data)?;
     } // large_data 在这里被释放
-    
+
     // 继续其他操作，内存已释放
     Ok(())
 }
@@ -403,7 +403,7 @@ function Component() {
     const interval = setInterval(() => {
       // 做某事
     }, 1000);
-    
+
     return () => clearInterval(interval);  // 清理
   }, []);
 }
@@ -434,7 +434,7 @@ function UserList({ users }: { users: User[] }) {
   const sortedUsers = useMemo(() => {
     return [...users].sort((a, b) => a.name.localeCompare(b.name));
   }, [users]);
-  
+
   return (
     <div>
       {sortedUsers.map(user => <UserItem key={user.id} user={user} />)}
@@ -474,13 +474,13 @@ async fn get_user(cache: &Cache<String, UserData>, id: &str) -> Result<UserData>
 fn process_all_users(conn: &Connection) -> Result<()> {
     let mut stmt = conn.prepare("SELECT * FROM users")?;
     let mut rows = stmt.query([])?;
-    
+
     // 逐行处理，不一次性加载所有数据
     while let Some(row) = rows.next()? {
         let user = User::from_row(row)?;
         process_user(&user)?;
     }
-    
+
     Ok(())
 }
 ```
@@ -493,13 +493,13 @@ use sysinfo::{System, SystemExt, ProcessExt};
 fn log_memory_usage() {
     let mut sys = System::new_all();
     sys.refresh_all();
-    
+
     if let Some(process) = sys.process(sysinfo::get_current_pid().unwrap()) {
         let memory_kb = process.memory();
         let memory_mb = memory_kb / 1024;
-        
+
         tracing::info!("Current memory usage: {} MB", memory_mb);
-        
+
         // 如果内存使用过高，记录警告
         if memory_mb > 200 {
             tracing::warn!("High memory usage detected: {} MB", memory_mb);
@@ -525,7 +525,7 @@ fn open_optimized_connection(path: &Path) -> Result<Connection> {
             | OpenFlags::SQLITE_OPEN_CREATE
             | OpenFlags::SQLITE_OPEN_NO_MUTEX  // 单线程访问
     )?;
-    
+
     // 性能优化配置
     conn.execute_batch("
         PRAGMA journal_mode = WAL;          -- 使用 WAL 模式提升并发性能
@@ -535,7 +535,7 @@ fn open_optimized_connection(path: &Path) -> Result<Connection> {
         PRAGMA mmap_size = 30000000000;     -- 使用内存映射
         PRAGMA page_size = 4096;            -- 4KB 页面大小
     ")?;
-    
+
     Ok(conn)
 }
 ```
@@ -549,7 +549,7 @@ CREATE INDEX IF NOT EXISTS idx_backups_created_at ON backups(created_at);
 CREATE INDEX IF NOT EXISTS idx_logs_timestamp ON logs(timestamp);
 
 -- 复合索引用于多列查询
-CREATE INDEX IF NOT EXISTS idx_accounts_status_created 
+CREATE INDEX IF NOT EXISTS idx_accounts_status_created
 ON accounts(status, created_at);
 ```
 
@@ -560,17 +560,17 @@ fn analyze_query(conn: &Connection, query: &str) -> Result<()> {
     let explain = format!("EXPLAIN QUERY PLAN {}", query);
     let mut stmt = conn.prepare(&explain)?;
     let mut rows = stmt.query([])?;
-    
+
     while let Some(row) = rows.next()? {
         let detail: String = row.get(3)?;
         println!("Query plan: {}", detail);
-        
+
         // 检查是否使用了索引
         if detail.contains("SCAN") && !detail.contains("INDEX") {
             tracing::warn!("Query not using index: {}", query);
         }
     }
-    
+
     Ok(())
 }
 ```
@@ -592,17 +592,17 @@ fn insert_users_slow(conn: &Connection, users: &[User]) -> Result<()> {
 // ✅ 使用事务批量插入（快）
 fn insert_users_fast(conn: &Connection, users: &[User]) -> Result<()> {
     let tx = conn.transaction()?;
-    
+
     {
         let mut stmt = tx.prepare(
             "INSERT INTO users (name, email) VALUES (?1, ?2)"
         )?;
-        
+
         for user in users {
             stmt.execute(params![user.name, user.email])?;
         }
     }
-    
+
     tx.commit()?;
     Ok(())
 }
@@ -656,18 +656,18 @@ impl ConnectionPool {
         for _ in 0..max_size {
             connections.push(open_optimized_connection(path)?);
         }
-        
+
         Ok(Self {
             connections: Arc::new(Mutex::new(connections)),
             max_size,
         })
     }
-    
+
     fn get_connection(&self) -> Result<Connection> {
         let mut pool = self.connections.lock().unwrap();
         pool.pop().ok_or_else(|| anyhow!("No available connections"))
     }
-    
+
     fn return_connection(&self, conn: Connection) {
         let mut pool = self.connections.lock().unwrap();
         if pool.len() < self.max_size {
@@ -683,13 +683,13 @@ impl ConnectionPool {
 async fn maintain_database(conn: &Connection) -> Result<()> {
     // 分析表以更新统计信息
     conn.execute("ANALYZE", [])?;
-    
+
     // 清理未使用的空间
     conn.execute("VACUUM", [])?;
-    
+
     // 优化数据库
     conn.execute("PRAGMA optimize", [])?;
-    
+
     tracing::info!("Database maintenance completed");
     Ok(())
 }
@@ -697,7 +697,7 @@ async fn maintain_database(conn: &Connection) -> Result<()> {
 // 定期执行维护（例如每周一次）
 async fn schedule_maintenance() {
     let mut interval = tokio::time::interval(Duration::from_secs(7 * 24 * 3600));
-    
+
     loop {
         interval.tick().await;
         if let Err(e) = maintain_database(&get_connection()).await {
@@ -758,7 +758,7 @@ export default {
         }
       }
     },
-    
+
     // 压缩配置
     minify: 'terser',
     terserOptions: {
@@ -767,10 +767,10 @@ export default {
         drop_debugger: true,
       }
     },
-    
+
     // 资源内联阈值
     assetsInlineLimit: 4096,  // 4KB 以下内联
-    
+
     // CSS 代码分割
     cssCodeSplit: true,
   }
@@ -1012,22 +1012,22 @@ use std::time::Instant;
 #[tokio::main]
 async fn main() {
     let start = Instant::now();
-    
+
     // 初始化
     let init_start = Instant::now();
     initialize_app().await;
     println!("Init: {:?}", init_start.elapsed());
-    
+
     // 数据库连接
     let db_start = Instant::now();
     connect_database().await;
     println!("Database: {:?}", db_start.elapsed());
-    
+
     // UI 启动
     let ui_start = Instant::now();
     start_ui().await;
     println!("UI: {:?}", ui_start.elapsed());
-    
+
     println!("Total startup: {:?}", start.elapsed());
 }
 ```
@@ -1039,15 +1039,15 @@ use sysinfo::{System, SystemExt, ProcessExt};
 
 fn benchmark_memory() {
     let mut sys = System::new_all();
-    
+
     // 基准内存
     sys.refresh_all();
     let baseline = get_memory_usage(&sys);
     println!("Baseline: {} MB", baseline);
-    
+
     // 执行操作
     perform_operations();
-    
+
     // 操作后内存
     sys.refresh_all();
     let after = get_memory_usage(&sys);
@@ -1071,7 +1071,7 @@ use std::time::Instant;
 
 fn benchmark_database() {
     let conn = get_connection().unwrap();
-    
+
     // 插入性能测试
     let start = Instant::now();
     let tx = conn.transaction().unwrap();
@@ -1083,7 +1083,7 @@ fn benchmark_database() {
     }
     tx.commit().unwrap();
     println!("Insert 1000 records: {:?}", start.elapsed());
-    
+
     // 查询性能测试
     let start = Instant::now();
     let mut stmt = conn.prepare("SELECT * FROM test").unwrap();
@@ -1104,18 +1104,18 @@ function PerformanceMonitor() {
     cpu: 0,
     fps: 0,
   });
-  
+
   useEffect(() => {
     const interval = setInterval(async () => {
       const memory = await invoke('get_memory_usage');
       const cpu = await invoke('get_cpu_usage');
-      
+
       setMetrics({ memory, cpu, fps: calculateFPS() });
     }, 1000);
-    
+
     return () => clearInterval(interval);
   }, []);
-  
+
   return (
     <div className="performance-monitor">
       <div>Memory: {metrics.memory} MB</div>

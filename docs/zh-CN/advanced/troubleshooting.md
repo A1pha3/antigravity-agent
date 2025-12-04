@@ -81,7 +81,7 @@ tail -f antigravity-agent.log
 2025-12-04T10:30:45.123Z INFO antigravity_agent::commands: Account switched successfully
   account_id: "user123"
   duration_ms: 245
-  
+
 2025-12-04T10:30:46.456Z ERROR antigravity_agent::backup: Backup failed
   error: "Permission denied"
   path: "/path/to/backup"
@@ -186,7 +186,7 @@ grep "span: backup_operation" antigravity-agent.log
    # 备份并删除配置目录
    # Windows
    mv %APPDATA%\.antigravity-agent %APPDATA%\.antigravity-agent.backup
-   
+
    # macOS/Linux
    mv ~/.config/.antigravity-agent ~/.config/.antigravity-agent.backup
    ```
@@ -280,7 +280,7 @@ pkill -9 antigravity
    ```bash
    # Windows
    dir %APPDATA%\.antigravity-agent\data.db
-   
+
    # macOS/Linux
    ls -lh ~/.config/.antigravity-agent/data.db
    ```
@@ -548,7 +548,7 @@ sqlite3 data.db "PRAGMA foreign_key_check;"
    ```bash
    # Windows
    netstat -ano | findstr :PORT
-   
+
    # macOS/Linux
    lsof -i :PORT
    ```
@@ -580,7 +580,7 @@ sqlite3 data.db "PRAGMA foreign_key_check;"
    ```bash
    # Windows: 事件查看器
    eventvwr.msc
-   
+
    # macOS: Console.app
    # Linux: journalctl
    journalctl -u antigravity
@@ -938,7 +938,7 @@ console.timeEnd('operation');
 // 在代码中设置断点
 function handleAccountSwitch(accountId: string) {
   debugger;  // 执行到这里会暂停
-  
+
   // 调试代码
   console.log('Switching to account:', accountId);
 }
@@ -1073,14 +1073,14 @@ use tracing::{debug, info, warn, error, instrument};
 #[instrument]
 async fn debug_function(param: &str) {
     debug!("Function called with param: {}", param);
-    
+
     // 添加结构化字段
     info!(
         param = param,
         timestamp = ?std::time::SystemTime::now(),
         "Processing started"
     );
-    
+
     // 执行操作
     match perform_operation(param).await {
         Ok(result) => {
@@ -1102,7 +1102,7 @@ use tracing_subscriber::{fmt, EnvFilter};
 fn setup_logging() {
     let filter = EnvFilter::try_from_default_env()
         .unwrap_or_else(|_| EnvFilter::new("info"));
-    
+
     fmt()
         .with_env_filter(filter)
         .with_target(true)

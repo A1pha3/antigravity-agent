@@ -150,7 +150,7 @@ export function useAntigravityAccount() {
   const fetchAccounts = useCallback(async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const data = await invoke<Account[]>('get_antigravity_accounts');
       setAccounts(data);
@@ -314,13 +314,13 @@ use thiserror::Error;
 pub enum AccountError {
     #[error("Account not found: {0}")]
     NotFound(String),
-    
+
     #[error("Database error: {0}")]
     Database(#[from] rusqlite::Error),
-    
+
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
-    
+
     #[error("Invalid account data: {0}")]
     InvalidData(String),
 }
@@ -377,7 +377,7 @@ pub async fn switch_antigravity_account(
     state: State<'_, AppState>,
 ) -> Result<(), String> {
     info!(account_id = %account_id, "开始切换账户");
-    
+
     // 执行业务逻辑
     match switch_account_impl(&account_id, &state).await {
         Ok(()) => {
@@ -420,15 +420,15 @@ async fn process_accounts() -> Result<Vec<Account>> {
             process_account(&id).await
         }))
         .collect();
-    
+
     let results = futures::future::join_all(handles).await;
-    
+
     // 处理结果
     let accounts: Result<Vec<_>> = results
         .into_iter()
         .map(|r| r.map_err(|e| AccountError::from(e))?)
         .collect();
-    
+
     accounts
 }
 ```
@@ -503,16 +503,16 @@ async fn switch_account(
     state: &AppState,
 ) -> Result<()> {
     info!(account_id = %account_id, "开始切换账户");
-    
+
     debug!("检查账户是否存在");
     let account = get_account(account_id)?;
-    
+
     debug!("终止当前进程");
     kill_current_process()?;
-    
+
     debug!("更新数据库");
     update_current_account(&account)?;
-    
+
     info!("账户切换成功");
     Ok(())
 }
@@ -534,7 +534,7 @@ fn handle_error(error: &AccountError) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_account_creation() {
         let account = Account {
@@ -542,17 +542,17 @@ mod tests {
             username: "test_user".to_string(),
             email: "test@example.com".to_string(),
         };
-        
+
         assert_eq!(account.id, "123");
         assert_eq!(account.username, "test_user");
     }
-    
+
     #[tokio::test]
     async fn test_async_backup() {
         let result = backup_account("test_id").await;
         assert!(result.is_ok());
     }
-    
+
     #[test]
     fn test_error_handling() {
         let result = get_account("nonexistent");
@@ -738,11 +738,11 @@ async fn load_user_data() { }
 ```typescript
 /**
  * 切换到指定的 Antigravity 账户
- * 
+ *
  * @param accountId - 要切换到的账户 ID
  * @returns Promise，成功时 resolve，失败时 reject
  * @throws {AccountError} 当账户不存在或切换失败时
- * 
+ *
  * @example
  * ```typescript
  * await switchAccount('account-123');
@@ -758,13 +758,13 @@ async function switchAccount(accountId: string): Promise<void> {
 interface Account {
   /** 账户唯一标识符 */
   id: string;
-  
+
   /** 用户名 */
   username: string;
-  
+
   /** 电子邮件地址 */
   email: string;
-  
+
   /** 账户创建时间 */
   createdAt: Date;
 }
@@ -835,10 +835,10 @@ pub async fn switch_account(account_id: &str) -> Result<()> {
 pub struct Account {
     /// 账户唯一标识符
     pub id: String,
-    
+
     /// 用户名
     pub username: String,
-    
+
     /// 电子邮件地址
     pub email: String,
 }
@@ -992,7 +992,7 @@ fn validate_account_id(id: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_validate_account_id() {
         assert!(validate_account_id("valid-id"));
@@ -1337,5 +1337,5 @@ npx husky add .husky/commit-msg 'npx --no -- commitlint --edit "$1"'
 
 ---
 
-**最后更新**: 2025-12-04  
+**最后更新**: 2025-12-04
 **文档版本**: 1.0.3

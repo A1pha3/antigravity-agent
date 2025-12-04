@@ -35,25 +35,25 @@ graph TB
         Services[服务层]
         State[状态管理 Zustand]
     end
-    
+
     subgraph "通信层"
         IPC[Tauri IPC Bridge]
     end
-    
+
     subgraph "后端层 (Rust + Tauri)"
         Commands[命令处理层]
         Business[业务逻辑层]
         Platform[平台适配层]
         Storage[数据存储层]
     end
-    
+
     subgraph "外部系统"
         AG[Antigravity 进程]
         DB[(SQLite 数据库)]
         FS[文件系统]
         OS[操作系统]
     end
-    
+
     UI --> Hooks
     Hooks --> Services
     Services --> State
@@ -66,7 +66,7 @@ graph TB
     Storage --> DB
     Storage --> FS
     Business --> AG
-    
+
     style UI fill:#e1f5ff
     style Commands fill:#fff4e1
     style Business fill:#fff4e1
@@ -110,21 +110,21 @@ graph TB
         Business[业务组件]
         Base[基础 UI 组件]
     end
-    
+
     subgraph "逻辑层"
         Hooks[自定义 Hooks]
         Modules[业务模块]
     end
-    
+
     subgraph "服务层"
         Services[服务封装]
         Commands[命令调用]
     end
-    
+
     subgraph "状态层"
         Zustand[Zustand Store]
     end
-    
+
     Pages --> Business
     Business --> Base
     Pages --> Hooks
@@ -133,7 +133,7 @@ graph TB
     Hooks --> Services
     Modules --> Zustand
     Services --> Commands
-    
+
     style Pages fill:#e3f2fd
     style Hooks fill:#f3e5f5
     style Services fill:#fff3e0
@@ -246,26 +246,26 @@ graph TB
         PlatformCmd[平台命令]
         TrayCmd[托盘命令]
     end
-    
+
     subgraph "业务逻辑层"
         Antigravity[Antigravity 管理]
         LanguageServer[语言服务器]
         DbMonitor[数据库监控]
         SystemTray[系统托盘]
     end
-    
+
     subgraph "平台适配层"
         Windows[Windows 适配]
         MacOS[macOS 适配]
         Linux[Linux 适配]
     end
-    
+
     subgraph "数据存储层"
         SQLite[(SQLite)]
         FileSystem[文件系统]
         Config[配置管理]
     end
-    
+
     AccountCmd --> Antigravity
     BackupCmd --> Antigravity
     ProcessCmd --> Antigravity
@@ -273,12 +273,12 @@ graph TB
     PlatformCmd --> MacOS
     PlatformCmd --> Linux
     TrayCmd --> SystemTray
-    
+
     Antigravity --> SQLite
     Antigravity --> FileSystem
     LanguageServer --> Config
     DbMonitor --> SQLite
-    
+
     style AccountCmd fill:#fff3e0
     style Antigravity fill:#e8f5e9
     style Windows fill:#f3e5f5
@@ -443,7 +443,7 @@ sequenceDiagram
     participant Command as 命令处理
     participant Business as 业务逻辑
     participant Storage as 数据存储
-    
+
     UI->>Service: 调用服务方法
     Service->>IPC: invoke(command, args)
     IPC->>Command: 路由到命令处理器
@@ -469,7 +469,7 @@ sequenceDiagram
     participant Backend as 后端命令
     participant DB as SQLite
     participant Process as Antigravity 进程
-    
+
     User->>UI: 点击切换账户
     UI->>Hook: switchAccount(accountId)
     Hook->>Service: switchAntigravityAccount(accountId)
@@ -494,7 +494,7 @@ sequenceDiagram
     participant FS as 文件系统
     participant Zip as ZIP 压缩
     participant Encrypt as 加密模块
-    
+
     User->>UI: 点击导出配置
     UI->>UI: 输入加密密码
     UI->>Backend: invoke('backup_profile', password)
@@ -520,7 +520,7 @@ graph LR
     C --> D[前端监听器]
     D --> E[更新账户列表]
     E --> F[刷新 UI]
-    
+
     style A fill:#fff3e0
     style C fill:#e8f5e9
     style F fill:#e1f5ff
@@ -543,7 +543,7 @@ useEffect(() => {
   const interval = setInterval(() => {
     checkAntigravityStatus();
   }, 5000); // 每 5 秒检查一次
-  
+
   return () => clearInterval(interval);
 }, []);
 ```
@@ -558,17 +558,17 @@ graph TD
     App[App.tsx] --> Toolbar[AppToolbar]
     App --> UserPanel[AppUserPanel]
     App --> StatusScreen[AntigravityStatusScreen]
-    
+
     UserPanel --> UserList[UserListItem]
     UserPanel --> QuotaDashboard
-    
+
     App --> Hooks[Custom Hooks]
     Hooks --> Services[Services]
     Hooks --> Modules[Modules/Stores]
-    
+
     Services --> Commands[Tauri Commands]
     Modules --> Commands
-    
+
     style App fill:#e3f2fd
     style Hooks fill:#f3e5f5
     style Services fill:#fff3e0
@@ -581,23 +581,23 @@ graph TD
 graph TD
     Main[main.rs] --> Setup[setup.rs]
     Main --> Commands[commands/]
-    
+
     Commands --> Account[account_commands]
     Commands --> Backup[backup_commands]
     Commands --> Process[process_commands]
-    
+
     Account --> Antigravity[antigravity/]
     Backup --> Antigravity
     Process --> Platform[platform/]
-    
+
     Antigravity --> State[state.rs]
     Platform --> State
-    
+
     Antigravity --> Storage[SQLite/FileSystem]
-    
+
     Setup --> SystemTray[system_tray/]
     Setup --> DbMonitor[db_monitor.rs]
-    
+
     style Main fill:#fff3e0
     style Commands fill:#e8f5e9
     style Antigravity fill:#e1f5ff
@@ -775,13 +775,13 @@ pub fn get_config_dir() -> PathBuf {
 pub fn encrypt_backup(data: &[u8], password: &str) -> Result<Vec<u8>> {
     // 1. 生成随机盐
     let salt = generate_random_salt();
-    
+
     // 2. 使用 PBKDF2 派生密钥
     let key = derive_key(password, &salt);
-    
+
     // 3. 使用 AES-256-GCM 加密
     let encrypted = aes_encrypt(data, &key)?;
-    
+
     // 4. 组合盐和加密数据
     Ok(combine(salt, encrypted))
 }
@@ -821,7 +821,7 @@ pub fn encrypt_backup(data: &[u8], password: &str) -> Result<Vec<u8>> {
 
 ```typescript
 // 使用 React.lazy 进行代码分割
-const SettingsDialog = React.lazy(() => 
+const SettingsDialog = React.lazy(() =>
   import('./components/business/SettingsDialog')
 );
 ```
@@ -867,7 +867,7 @@ async fn backup_profile(password: String) -> Result<String> {
 use moka::future::Cache;
 
 lazy_static! {
-    static ref USER_CACHE: Cache<String, UserInfo> = 
+    static ref USER_CACHE: Cache<String, UserInfo> =
         Cache::builder()
             .max_capacity(100)
             .time_to_live(Duration::from_secs(300))
@@ -919,7 +919,7 @@ graph LR
     B --> D[开发调试]
     C --> E[问题排查]
     C --> F[日志归档]
-    
+
     style A fill:#fff3e0
     style B fill:#e3f2fd
     style C fill:#e8f5e9
@@ -933,7 +933,7 @@ fn init_tracing() -> WorkerGuard {
     let log_dir = get_log_directory();
     let file_appender = rolling::daily(&log_dir, "antigravity-agent");
     let (non_blocking, guard) = non_blocking(file_appender);
-    
+
     tracing_subscriber::registry()
         .with(
             // 控制台层：彩色、紧凑格式
@@ -950,7 +950,7 @@ fn init_tracing() -> WorkerGuard {
                 .with_ansi(false)
         )
         .init();
-    
+
     guard
 }
 ```
@@ -1022,5 +1022,5 @@ tracing::error!(
 
 ---
 
-**最后更新**: 2025-12-04  
+**最后更新**: 2025-12-04
 **文档版本**: 1.0.3

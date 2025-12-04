@@ -277,26 +277,26 @@ gitGraph
     branch develop
     checkout develop
     commit id: "Dev setup"
-    
+
     branch feature/new-feature
     checkout feature/new-feature
     commit id: "Feature work"
     commit id: "Feature complete"
-    
+
     checkout develop
     merge feature/new-feature
     commit id: "Merge feature"
-    
+
     checkout main
     merge develop tag: "v1.0.0"
-    
+
     branch hotfix/critical-bug
     checkout hotfix/critical-bug
     commit id: "Fix bug"
-    
+
     checkout main
     merge hotfix/critical-bug tag: "v1.0.1"
-    
+
     checkout develop
     merge hotfix/critical-bug
 ```
@@ -515,7 +515,7 @@ graph LR
     F -->|是| G[根据反馈修改]
     G --> E
     F -->|否| H[批准并合并]
-    
+
     style A fill:#e3f2fd
     style H fill:#c8e6c9
     style D fill:#ffcdd2
@@ -769,7 +769,7 @@ Error: Account not found
 
 ---
 
-**最后更新**: 2025-12-04  
+**最后更新**: 2025-12-04
 **文档版本**: 1.0.3
 
 再次感谢您的贡献！🎉

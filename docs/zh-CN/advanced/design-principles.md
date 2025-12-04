@@ -241,10 +241,10 @@ mod linux_impl;
 pub fn get_platform_manager() -> Box<dyn PlatformManager> {
     #[cfg(target_os = "windows")]
     return Box::new(windows_impl::WindowsManager::new());
-    
+
     #[cfg(target_os = "macos")]
     return Box::new(macos_impl::MacOSManager::new());
-    
+
     #[cfg(target_os = "linux")]
     return Box::new(linux_impl::LinuxManager::new());
 }
@@ -321,13 +321,13 @@ let data_dir = dirs::data_local_dir()
 pub fn encrypt_backup(data: &[u8], password: &str) -> Result<Vec<u8>> {
     // 1. 生成随机盐值
     let salt = generate_random_salt();
-    
+
     // 2. 使用 PBKDF2 派生密钥
     let key = derive_key(password, &salt);
-    
+
     // 3. 使用 AES-256-GCM 加密
     let encrypted = aes_encrypt(data, &key)?;
-    
+
     // 4. 组合盐值和密文
     Ok(combine(salt, encrypted))
 }
@@ -662,7 +662,7 @@ async fn expensive_operation() {
 #[cfg(test)]
 mod benchmarks {
     use criterion::{black_box, criterion_group, Criterion};
-    
+
     fn benchmark_function(c: &mut Criterion) {
         c.bench_function("operation", |b| {
             b.iter(|| {
@@ -700,7 +700,7 @@ impl PluginManager {
     fn register(&mut self, plugin: Box<dyn Plugin>) {
         self.plugins.insert(plugin.name().to_string(), plugin);
     }
-    
+
     fn execute(&self, plugin_name: &str, command: &str) -> Result<Value> {
         let plugin = self.plugins.get(plugin_name)?;
         plugin.execute(command, &[])
@@ -729,7 +729,7 @@ impl Command for BackupCommand {
     fn execute(&self) -> Result<Value> {
         // 执行备份
     }
-    
+
     fn undo(&self) -> Result<()> {
         // 撤销备份
     }
@@ -746,14 +746,14 @@ impl Command for BackupCommand {
 struct AppConfig {
     // 通用配置
     general: GeneralConfig,
-    
+
     // 功能开关
     features: FeatureFlags,
-    
+
     // 平台特定配置
     #[cfg(target_os = "windows")]
     windows: WindowsConfig,
-    
+
     #[cfg(target_os = "macos")]
     macos: MacOSConfig,
 }
@@ -798,7 +798,7 @@ impl EventBus {
             listener.on_event(&event);
         }
     }
-    
+
     fn subscribe(&mut self, listener: Box<dyn EventListener>) {
         self.listeners.push(listener);
     }
@@ -838,14 +838,14 @@ struct Migration {
 
 fn run_migrations(conn: &Connection) -> Result<()> {
     let current_version = get_db_version(conn)?;
-    
+
     for migration in MIGRATIONS.iter() {
         if migration.version > current_version {
             (migration.up)(conn)?;
             set_db_version(conn, migration.version)?;
         }
     }
-    
+
     Ok(())
 }
 ```
@@ -933,7 +933,7 @@ impl<D: DatabaseAccess> AccountService<D> {
     fn new(db: D) -> Self {
         Self { db }
     }
-    
+
     fn process_account(&self, id: &str) -> Result<()> {
         let account = self.db.get_account(id)?;
         // 处理账户
@@ -945,13 +945,13 @@ impl<D: DatabaseAccess> AccountService<D> {
 #[cfg(test)]
 mod tests {
     struct MockDatabase;
-    
+
     impl DatabaseAccess for MockDatabase {
         fn get_account(&self, id: &str) -> Result<Account> {
             // 返回测试数据
         }
     }
-    
+
     #[test]
     fn test_process_account() {
         let service = AccountService::new(MockDatabase);

@@ -115,7 +115,7 @@ tags: [FAQ, 常见问题, 问答]
 
 #### Q10: 如何删除账户？
 
-**A:** 
+**A:**
 1. 在账户列表中找到要删除的账户
 2. 点击账户右侧的删除按钮（垃圾桶图标）
 3. 确认删除操作
@@ -126,7 +126,7 @@ tags: [FAQ, 常见问题, 问答]
 
 #### Q11: 如何备份账户配置？
 
-**A:** 
+**A:**
 1. 选择要备份的账户
 2. 点击"导出"按钮
 3. 设置加密密码（强烈建议）
@@ -169,7 +169,7 @@ tags: [FAQ, 常见问题, 问答]
 
 #### Q16: 如何启用系统托盘？
 
-**A:** 
+**A:**
 1. 打开设置（点击右上角齿轮图标）
 2. 找到"系统托盘"选项
 3. 开启"启用系统托盘"开关
@@ -183,7 +183,7 @@ tags: [FAQ, 常见问题, 问答]
 
 #### Q18: 如何设置开机自启动？
 
-**A:** 
+**A:**
 1. 打开设置
 2. 找到"启动选项"
 3. 开启"开机自启动"开关
@@ -214,7 +214,7 @@ tags: [FAQ, 常见问题, 问答]
 
 #### Q20: 如何运行开发服务器？
 
-**A:** 
+**A:**
 ```bash
 # 克隆仓库
 git clone https://github.com/MonchiLin/antigravity-agent.git
@@ -231,7 +231,7 @@ npm run tauri:dev
 
 #### Q21: 如何构建生产版本？
 
-**A:** 
+**A:**
 ```bash
 # 构建所有平台
 npm run tauri:build
@@ -305,7 +305,7 @@ async fn get_accounts() -> Result<Vec<Account>, String> {
 
 #### Q26: 如何调试应用程序？
 
-**A:** 
+**A:**
 
 **前端调试：**
 - 使用 Chrome DevTools（Ctrl+Shift+I / Cmd+Option+I）
@@ -320,7 +320,7 @@ async fn get_accounts() -> Result<Vec<Account>, String> {
 
 #### Q27: 如何贡献代码？
 
-**A:** 
+**A:**
 
 1. Fork 仓库
 2. 创建功能分支：`git checkout -b feature/my-feature`
@@ -334,7 +334,7 @@ async fn get_accounts() -> Result<Vec<Account>, String> {
 
 #### Q28: 如何运行测试？
 
-**A:** 
+**A:**
 
 **Rust 测试：**
 ```bash
@@ -357,7 +357,7 @@ npm test
 
 #### Q30: 如何编写测试？
 
-**A:** 
+**A:**
 
 **Rust 单元测试：**
 ```rust
@@ -391,7 +391,7 @@ describe('MyComponent', () => {
 
 #### Q31: 如何创建安装包？
 
-**A:** 
+**A:**
 
 ```bash
 # 构建所有平台的安装包
@@ -427,7 +427,7 @@ src-tauri/target/release/bundle/appimage/
 
 #### Q33: 如何签名应用程序？
 
-**A:** 
+**A:**
 
 **Windows (代码签名):**
 ```bash
@@ -524,28 +524,28 @@ jobs:
     strategy:
       matrix:
         platform: [windows-latest, macos-latest, ubuntu-latest]
-    
+
     runs-on: ${{ matrix.platform }}
-    
+
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
           node-version: 18
-      
+
       - name: Setup Rust
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-      
+
       - name: Install dependencies
         run: npm install
-      
+
       - name: Build
         run: npm run tauri:build
-      
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -555,7 +555,7 @@ jobs:
 
 #### Q37: 如何自动化发布流程？
 
-**A:** 
+**A:**
 
 1. **创建 Git tag**：
 ```bash
@@ -572,7 +572,7 @@ git push origin v1.0.3
 
 #### Q38: 如何优化安装包大小？
 
-**A:** 
+**A:**
 
 1. **Rust 优化**（`Cargo.toml`）：
 ```toml
@@ -594,7 +594,7 @@ strip = true
 
 #### Q39: 如何提高应用程序性能？
 
-**A:** 
+**A:**
 
 1. **启动性能**：
    - 延迟初始化
@@ -615,7 +615,7 @@ strip = true
 
 #### Q40: 如何监控生产环境的性能？
 
-**A:** 
+**A:**
 
 1. **内置日志系统**：
    - 记录关键操作的耗时
@@ -637,7 +637,7 @@ strip = true
 
 #### Q41: Antigravity Agent 有哪些已知限制？
 
-**A:** 
+**A:**
 
 **平台限制：**
 - ❌ Linux 支持尚未完成（计划中）
@@ -758,7 +758,7 @@ strip = true
 
 #### Q50: 如何参与功能开发？
 
-**A:** 
+**A:**
 
 1. **提出建议**：
    - 在 GitHub Issues 中创建 Feature Request
@@ -779,7 +779,7 @@ strip = true
 
 #### Q51: 有哪些已知的技术债务？
 
-**A:** 
+**A:**
 
 **代码质量：**
 - 部分模块缺少单元测试
@@ -800,7 +800,7 @@ strip = true
 
 #### Q52: 如何报告 Bug？
 
-**A:** 
+**A:**
 
 1. **检查是否已报告**：
    - 搜索 GitHub Issues
@@ -826,7 +826,7 @@ strip = true
 
 #### Q53: 如何获取帮助？
 
-**A:** 
+**A:**
 
 1. **文档**：
    - [用户指南](../user-guide/user-guide.md)
@@ -844,7 +844,7 @@ strip = true
 
 #### Q54: 如何贡献文档？
 
-**A:** 
+**A:**
 
 1. **发现问题**：
    - 文档错误
@@ -867,7 +867,7 @@ strip = true
 
 #### Q55: 项目的开发状态如何？
 
-**A:** 
+**A:**
 
 **活跃度：**
 - ✅ 积极维护中
@@ -886,7 +886,7 @@ strip = true
 
 #### Q56: 项目的长期规划是什么？
 
-**A:** 
+**A:**
 
 **短期（6 个月）：**
 - 完善核心功能

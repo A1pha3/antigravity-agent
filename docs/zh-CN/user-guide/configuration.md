@@ -1357,5 +1357,5 @@ scp -r ~/.config/.antigravity-agent/backups/ user@deviceB:~/.config/.antigravity
 
 ---
 
-**最后更新**：2025-12-04  
+**最后更新**：2025-12-04
 **文档版本**：1.0.3

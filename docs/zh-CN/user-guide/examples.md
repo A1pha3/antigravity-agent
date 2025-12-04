@@ -55,7 +55,7 @@ tags: [示例, 最佳实践, 使用场景]
    - 找到工作账户卡片
    - 点击"切换"按钮
    - 等待几秒，切换完成
-   
+
    下班后：
    - 找到个人账户卡片
    - 点击"切换"按钮
@@ -85,12 +85,12 @@ tags: [示例, 最佳实践, 使用场景]
    客户 A:
    1. 登录客户 A 提供的 Antigravity 账户
    2. Antigravity Agent 自动备份为 "clientA@example.com"
-   
+
    客户 B:
    1. 使用"登录新账户"功能
    2. 登录客户 B 的账户
    3. 自动备份为 "clientB@example.com"
-   
+
    重复此过程添加更多客户账户
    ```
 
@@ -100,7 +100,7 @@ tags: [示例, 最佳实践, 使用场景]
    - 切换到 clientA@example.com
    - 查看配额仪表盘，确认可用额度
    - 开始工作
-   
+
    切换到客户 B 的项目：
    - 点击切换到 clientB@example.com
    - 无需重启任何工具
@@ -147,12 +147,12 @@ tags: [示例, 最佳实践, 使用场景]
    - 使用 dev@company.com 账户
    - 自由测试各种功能
    - 不用担心配额消耗
-   
+
    生产部署前：
    - 切换到 prod@company.com
    - 进行最终验证
    - 确认功能正常后部署
-   
+
    部署后：
    - 立即切换回 dev@company.com
    - 继续开发工作
@@ -199,7 +199,7 @@ tags: [示例, 最佳实践, 使用场景]
    - 管理员导出团队账户配置
    - 加密并分享给团队成员
    - 成员导入配置文件
-   
+
    方法 2: 手动配置
    - 每个成员独立添加团队账户
    - 使用相同的登录凭据
@@ -389,12 +389,12 @@ Windows → Linux (未来):
    1. 重新安装 Antigravity Agent
    2. 使用"导入"功能恢复配置
    3. 验证所有账户
-   
+
    情况 B：只有旧备份
    1. 导入旧备份
    2. 手动添加新增的账户
    3. 更新账户信息
-   
+
    情况 C：没有备份
    1. 重新安装应用
    2. 逐个重新登录账户
@@ -436,7 +436,7 @@ Windows → Linux (未来):
 1. **建立版本命名规范**
    ```
    格式：antigravity_v[版本号]_[日期]_[描述].enc
-   
+
    示例：
    - antigravity_v1.0_2025-12-01_initial.enc
    - antigravity_v1.1_2025-12-04_added-work-account.enc
@@ -471,16 +471,16 @@ Windows → Linux (未来):
 4. **变更日志示例**
    ```markdown
    # Version 1.1 - 2025-12-04
-   
+
    ## 变更内容
    - 添加工作账户 (work@company.com)
    - 更新个人账户配置
    - 启用系统托盘功能
-   
+
    ## 账户列表
    1. personal@example.com (个人)
    2. work@company.com (工作)
-   
+
    ## 回滚说明
    如需回滚到 v1.0，导入 antigravity_v1.0_2025-12-01.enc
    ```
@@ -528,11 +528,11 @@ Windows → Linux (未来):
    - 上传到公司内网
    - 设置访问权限
    - 提供下载链接
-   
+
    方式 2：加密邮件
    - 使用加密邮件服务
    - 密码单独通过其他渠道发送
-   
+
    方式 3：USB 驱动器
    - 复制到 USB
    - 当面交付
@@ -565,7 +565,7 @@ Windows → Linux (未来):
    1. 依次切换到每个账户
    2. 在 Antigravity 中更新配置
    3. Antigravity Agent 自动同步更新
-   
+
    方法 2：手动更新后重新备份
    1. 在 Antigravity 中批量更新
    2. 切换到每个账户触发自动备份
@@ -596,19 +596,19 @@ const accountsToUpdate = [
 async function batchUpdateAccounts() {
   for (const account of accountsToUpdate) {
     console.log(`更新账户: ${account.email}`);
-    
+
     // 1. 切换到账户
     await switchAccount(account.email);
-    
+
     // 2. 在 Antigravity 中更新 API 密钥
     // （需要手动操作）
-    
+
     // 3. 等待自动备份
     await waitForBackup();
-    
+
     console.log(`✓ ${account.email} 更新完成`);
   }
-  
+
   console.log('所有账户更新完成');
 }
 ```
@@ -623,7 +623,7 @@ async function batchUpdateAccounts() {
 1. **审计现有账户**
    ```
    创建账户清单：
-   
+
    | 邮箱 | 用途 | 最后使用 | 状态 | 操作 |
    |------|------|----------|------|------|
    | work@company.com | 工作 | 2025-12-04 | 活跃 | 保留 |
@@ -693,7 +693,7 @@ async function batchUpdateAccounts() {
    2. 从云存储下载配置文件
    3. 导入配置
    4. 验证同步成功
-   
+
    设备 B（家用电脑）：
    1. 重复相同步骤
    2. 确保所有设备配置一致
@@ -702,13 +702,13 @@ async function batchUpdateAccounts() {
 3. **保持同步**
    ```
    定期同步流程：
-   
+
    每周一次：
    1. 在主设备上导出最新配置
    2. 上传到云存储（覆盖旧文件）
    3. 在其他设备上下载并导入
    4. 验证同步成功
-   
+
    自动化（可选）：
    - 使用云同步工具（OneDrive/Dropbox）
    - 设置自动同步目录
@@ -718,13 +718,13 @@ async function batchUpdateAccounts() {
 4. **冲突处理**
    ```
    如果不同设备有不同的账户：
-   
+
    方法 1：合并配置
    1. 从设备 A 导出配置
    2. 在设备 B 导入（合并模式）
    3. 从设备 B 导出完整配置
    4. 分发到所有设备
-   
+
    方法 2：分别管理
    1. 每个设备维护独立配置
    2. 只同步共享账户
@@ -762,16 +762,16 @@ async function batchUpdateAccounts() {
    **错误 1: "Database is locked"**
    ```
    原因：数据库被其他进程占用
-   
+
    解决方案：
    1. 关闭所有 Antigravity 相关进程
       Windows: taskkill /F /IM antigravity.exe
       macOS: pkill -9 antigravity
-   
+
    2. 删除锁文件
       Windows: del %APPDATA%\.antigravity\*.db-shm
       macOS: rm ~/.antigravity/*.db-shm
-   
+
    3. 重启 Antigravity Agent
    4. 重试切换操作
    ```
@@ -779,12 +779,12 @@ async function batchUpdateAccounts() {
    **错误 2: "Account data not found"**
    ```
    原因：账户备份数据损坏或丢失
-   
+
    解决方案：
    1. 检查备份文件是否存在
    2. 如果有导出备份，尝试重新导入
    3. 如果没有备份，需要重新登录该账户
-   
+
    步骤：
    1. 删除损坏的账户
    2. 使用"登录新账户"功能
@@ -795,12 +795,12 @@ async function batchUpdateAccounts() {
    **错误 3: "Permission denied"**
    ```
    原因：没有写入权限
-   
+
    解决方案：
    Windows:
    1. 以管理员身份运行应用
    2. 检查文件夹权限
-   
+
    macOS:
    1. 授予完全磁盘访问权限
       系统偏好设置 -> 安全性与隐私 -> 完全磁盘访问
@@ -834,7 +834,7 @@ async function batchUpdateAccounts() {
    **问题 1: "Invalid password"**
    ```
    原因：密码输入错误
-   
+
    解决方案：
    1. 确认密码正确（注意大小写）
    2. 检查键盘布局（中英文输入法）
@@ -847,7 +847,7 @@ async function batchUpdateAccounts() {
    **问题 2: "File corrupted"**
    ```
    原因：备份文件损坏
-   
+
    解决方案：
    1. 尝试其他备份文件
    2. 如果是从云盘下载的，重新下载
@@ -860,7 +860,7 @@ async function batchUpdateAccounts() {
    **问题 3: "Import succeeded but accounts missing"**
    ```
    原因：部分数据导入失败
-   
+
    解决方案：
    1. 检查日志文件了解详细错误
    2. 尝试重新导入
@@ -873,20 +873,20 @@ async function batchUpdateAccounts() {
 3. **手动恢复步骤**
    ```
    如果自动导入失败：
-   
+
    1. 备份当前数据
       复制整个配置目录到安全位置
-   
+
    2. 清空应用数据
       Windows: 删除 %APPDATA%\.antigravity-agent
       macOS: 删除 ~/.config/.antigravity-agent
-   
+
    3. 重启应用
       应用会创建新的配置目录
-   
+
    4. 重新导入
       使用"导入"功能加载备份文件
-   
+
    5. 验证结果
       检查所有账户是否恢复
    ```
@@ -905,7 +905,7 @@ async function batchUpdateAccounts() {
    ☑ WebView2 Runtime 已安装
    ☑ 至少 4GB RAM
    ☑ 100MB 可用磁盘空间
-   
+
    macOS:
    ☑ macOS 10.15 或更高版本
    ☑ 至少 4GB RAM
@@ -917,7 +917,7 @@ async function batchUpdateAccounts() {
    日志位置：
    Windows: %APPDATA%\.antigravity-agent\logs\
    macOS: ~/.config/.antigravity-agent/logs/
-   
+
    查找启动错误：
    grep "ERROR" antigravity-agent.log | head -20
    ```
@@ -929,9 +929,9 @@ async function batchUpdateAccounts() {
    解决方案：
    1. 下载 WebView2 Runtime
       https://developer.microsoft.com/microsoft-edge/webview2/
-   
+
    2. 安装 Evergreen Standalone Installer
-   
+
    3. 重启应用
    ```
 
@@ -941,7 +941,7 @@ async function batchUpdateAccounts() {
    1. 打开终端
    2. 运行命令：
       xattr -cr /Applications/Antigravity\ Agent.app
-   
+
    3. 重新打开应用
    ```
 
@@ -952,7 +952,7 @@ async function batchUpdateAccounts() {
    2. 删除配置文件：
       Windows: del %APPDATA%\.antigravity-agent\config.json
       macOS: rm ~/.config/.antigravity-agent/config.json
-   
+
    3. 重启应用（会使用默认配置）
    4. 如果有备份，重新导入
    ```
@@ -960,20 +960,20 @@ async function batchUpdateAccounts() {
 4. **完全重置**
    ```
    如果所有方法都失败：
-   
+
    1. 导出账户备份（如果可能）
-   
+
    2. 完全卸载应用
-      Windows: 
+      Windows:
       - 控制面板 -> 卸载程序
       - 删除 %APPDATA%\.antigravity-agent
-      
+
       macOS:
       - 删除 /Applications/Antigravity Agent.app
       - 删除 ~/.config/.antigravity-agent
-   
+
    3. 重新安装应用
-   
+
    4. 导入备份恢复数据
    ```
 
@@ -990,7 +990,7 @@ async function batchUpdateAccounts() {
    1. 按 Ctrl+Shift+Esc
    2. 找到 Antigravity Agent 进程
    3. 查看 CPU、内存、磁盘使用率
-   
+
    macOS (活动监视器):
    1. 打开活动监视器
    2. 找到 Antigravity Agent
@@ -1003,7 +1003,7 @@ async function batchUpdateAccounts() {
    - CPU: 空闲时 < 5%，操作时 < 30%
    - 内存: 50-150 MB
    - 磁盘: 偶尔读写
-   
+
    异常情况：
    - CPU: 持续 > 50%
    - 内存: > 300 MB
@@ -1015,26 +1015,26 @@ async function batchUpdateAccounts() {
    **优化 1: 清理日志文件**
    ```
    日志文件可能占用大量空间
-   
+
    Windows:
    cd %APPDATA%\.antigravity-agent\logs
    del /Q *.log.old
-   
+
    macOS:
    cd ~/.config/.antigravity-agent/logs
    rm *.log.old
-   
+
    保留最近 7 天的日志即可
    ```
 
    **优化 2: 优化数据库**
    ```
    使用 SQLite 命令行工具：
-   
+
    cd ~/.config/.antigravity-agent
    sqlite3 data.db "VACUUM;"
    sqlite3 data.db "ANALYZE;"
-   
+
    这会压缩数据库并优化查询性能
    ```
 
@@ -1082,7 +1082,7 @@ Antigravity 中的账户变化没有被 Agent 检测到。
    1. 关闭 Antigravity Agent
    2. 重新打开
    3. 等待自动检测
-   
+
    方法 2: 切换账户
    1. 切换到任意账户
    2. 触发数据库更新
@@ -1092,31 +1092,31 @@ Antigravity 中的账户变化没有被 Agent 检测到。
 3. **检查数据库连接**
    ```
    验证数据库文件：
-   
+
    Windows:
    dir %APPDATA%\.antigravity\*.db
-   
+
    macOS:
    ls -la ~/.antigravity/*.db
-   
+
    确认文件存在且可访问
    ```
 
 4. **解决同步问题**
    ```
    如果持续无法同步：
-   
+
    1. 检查文件权限
       确保 Agent 有读写权限
-   
+
    2. 检查防病毒软件
       可能阻止了文件访问
-   
+
    3. 重新配置监控
       - 重启 Antigravity
       - 重启 Agent
       - 手动切换一次账户
-   
+
    4. 查看详细日志
       启用 debug 日志级别
       RUST_LOG=debug ./antigravity-agent
