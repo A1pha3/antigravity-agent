@@ -925,10 +925,28 @@ strip = true
 
 ## 相关文档
 
-- [用户指南](../user-guide/user-guide.md) - 基本使用说明
-- [问题排查手册](./troubleshooting.md) - 问题诊断和解决
-- [性能优化指南](./performance.md) - 性能优化技巧
-- [设计原理](./design-principles.md) - 架构和设计决策
-- [开发指南](../development/development-guide.md) - 开发环境搭建
-- [贡献指南](../development/contributing.md) - 如何贡献代码
+### 进阶文档
+- [问题排查](./troubleshooting.md) - 常见问题诊断和解决
+- [性能优化](./performance.md) - 性能分析和优化建议
+- [设计原理](./design-principles.md) - 核心设计思路和技术选型
+
+### 使用文档
+- [使用手册](../user-guide/user-guide.md) - 完整的功能说明和操作指南
+- [配置说明](../user-guide/configuration.md) - 配置选项详解
+- [API 参考](../user-guide/api-reference.md) - 所有命令和接口说明
+- [使用示例](../user-guide/examples.md) - 常见场景示例
+
+### 开发文档
+- [开发指南](../development/development-guide.md) - 开发环境搭建和工作流程
+- [贡献指南](../development/contributing.md) - 如何参与项目贡献
+- [系统架构](../development/architecture.md) - 系统整体架构设计
+- [代码规范](../development/code-style.md) - 代码风格和最佳实践
+
+### 入门文档
+- [项目概览](../getting-started/README.md) - 了解项目的基本信息
+- [安装指南](../getting-started/installation.md) - 详细的安装步骤和系统要求
+- [快速开始](../getting-started/quickstart.md) - 5 分钟快速上手教程
+
+### 返回
+- [文档首页](../../README.md) - 返回文档导航页
 

@@ -975,8 +975,24 @@ Antigravity Agent 的设计遵循以下核心原则：
 
 ## 相关文档
 
-- [系统架构](../development/architecture.md) - 详细的架构设计
-- [性能优化指南](./performance.md) - 具体的性能优化技巧
-- [开发指南](../development/development-guide.md) - 开发环境搭建
-- [问题排查手册](./troubleshooting.md) - 常见问题解决方案
+### 进阶文档
+- [性能优化](./performance.md) - 性能分析和优化建议
+- [问题排查](./troubleshooting.md) - 常见问题诊断和解决
+- [FAQ](./faq.md) - 常见问题解答
+
+### 开发文档
+- [系统架构](../development/architecture.md) - 系统整体架构设计
+- [开发指南](../development/development-guide.md) - 开发环境搭建和工作流程
+- [代码规范](../development/code-style.md) - 代码风格和最佳实践
+
+### 使用文档
+- [使用手册](../user-guide/user-guide.md) - 完整的功能说明和操作指南
+- [配置说明](../user-guide/configuration.md) - 配置选项详解
+
+### 入门文档
+- [项目概览](../getting-started/README.md) - 了解项目的基本信息
+- [快速开始](../getting-started/quickstart.md) - 5 分钟快速上手教程
+
+### 返回
+- [文档首页](../../README.md) - 返回文档导航页
 
