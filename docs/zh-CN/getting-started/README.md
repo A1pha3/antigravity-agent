@@ -123,6 +123,19 @@ Antigravity Agent 的设计目标是：
 
 ## 相关文档
 
-- [安装指南](installation.md)
-- [快速开始](quickstart.md)
-- [系统架构](../development/architecture.md)
+### 入门文档
+- [安装指南](installation.md) - 详细的安装步骤和系统要求
+- [快速开始](quickstart.md) - 5 分钟快速上手教程
+
+### 使用文档
+- [使用手册](../user-guide/user-guide.md) - 完整的功能说明和操作指南
+- [API 参考](../user-guide/api-reference.md) - 所有命令和接口说明
+- [配置说明](../user-guide/configuration.md) - 配置选项详解
+
+### 开发文档
+- [系统架构](../development/architecture.md) - 系统整体架构设计
+- [开发指南](../development/development-guide.md) - 开发环境搭建和工作流程
+
+### 进阶文档
+- [设计原理](../advanced/design-principles.md) - 核心设计思路和技术选型
+- [问题排查](../advanced/troubleshooting.md) - 常见问题诊断和解决

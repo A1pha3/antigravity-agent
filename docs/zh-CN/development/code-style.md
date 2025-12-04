@@ -1303,9 +1303,25 @@ npx husky add .husky/commit-msg 'npx --no -- commitlint --edit "$1"'
 
 ## 相关文档
 
-- [开发环境搭建指南](./development-guide.md)
-- [贡献指南](./contributing.md)
-- [系统架构文档](./architecture.md)
+### 开发文档
+- [开发指南](./development-guide.md) - 开发环境搭建和工作流程
+- [贡献指南](./contributing.md) - 如何参与项目贡献
+- [系统架构](./architecture.md) - 系统整体架构设计
+
+### 使用文档
+- [使用手册](../user-guide/user-guide.md) - 完整的功能说明和操作指南
+- [API 参考](../user-guide/api-reference.md) - 所有命令和接口说明
+
+### 进阶文档
+- [设计原理](../advanced/design-principles.md) - 核心设计思路和技术选型
+- [性能优化](../advanced/performance.md) - 性能分析和优化建议
+
+### 入门文档
+- [项目概览](../getting-started/README.md) - 了解项目的基本信息
+- [快速开始](../getting-started/quickstart.md) - 5 分钟快速上手教程
+
+### 返回
+- [文档首页](../../README.md) - 返回文档导航页
 
 ## 参考资源
 

@@ -77,6 +77,10 @@ Antigravity Agent 是一个开箱即用的 Antigravity 账户管理程序，使�
 当前文档版本：**v1.0.3**  
 最后更新：2025-12-04
 
+## 术语表
+
+不熟悉某些技术术语？查看我们的[术语表](zh-CN/GLOSSARY.md)，了解项目中使用的专业术语的中英文对照和详细解释。
+
 ## 贡献文档
 
 如果您发现文档中的错误或希望改进文档，欢迎提交 Pull Request 或创建 Issue。
@@ -87,6 +91,7 @@ Antigravity Agent 是一个开箱即用的 Antigravity 账户管理程序，使�
 - 遵循 `.markdownlint.json` 中定义的格式规范
 - 使用文档模板 `zh-CN/_template.md`
 - 保持中文表述清晰专业
+- 专业术语提供中英文对照（参考[术语表](zh-CN/GLOSSARY.md)）
 
 ## 获取帮助
 

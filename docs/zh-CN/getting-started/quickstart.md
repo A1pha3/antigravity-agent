@@ -457,11 +457,25 @@ Antigravity Agent 支持在系统托盘中运行，方便快速访问。
 
 ## 相关文档
 
-- [安装指南](installation.md) - 详细的安装步骤
-- [使用手册](../user-guide/user-guide.md) - 完整功能说明
+### 入门文档
+- [项目概览](README.md) - 了解项目的基本信息
+- [安装指南](installation.md) - 详细的安装步骤和系统要求
+
+### 深入学习
+- [使用手册](../user-guide/user-guide.md) - 完整的功能说明和操作指南
 - [配置说明](../user-guide/configuration.md) - 配置选项详解
+- [使用示例](../user-guide/examples.md) - 常见场景和最佳实践
+
+### 技术参考
 - [API 参考](../user-guide/api-reference.md) - 命令和接口文档
-- [问题排查](../advanced/troubleshooting.md) - 常见问题解决方案
+- [系统架构](../development/architecture.md) - 系统整体架构设计
+
+### 问题解决
+- [问题排查](../advanced/troubleshooting.md) - 常见问题诊断和解决
+- [FAQ](../advanced/faq.md) - 常见问题解答
+
+### 返回
+- [文档首页](../../README.md) - 返回文档导航页
 
 ---
 

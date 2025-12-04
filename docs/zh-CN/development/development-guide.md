@@ -1092,11 +1092,27 @@ npm run format
 
 ## 相关文档
 
-- [系统架构文档](./architecture.md)
-- [贡献指南](./contributing.md)
-- [代码规范](./code-style.md)
-- [快速开始](../getting-started/quickstart.md)
-- [安装指南](../getting-started/installation.md)
+### 开发文档
+- [系统架构](./architecture.md) - 系统整体架构设计
+- [贡献指南](./contributing.md) - 如何参与项目贡献
+- [代码规范](./code-style.md) - 代码风格和最佳实践
+
+### 入门文档
+- [项目概览](../getting-started/README.md) - 了解项目的基本信息
+- [安装指南](../getting-started/installation.md) - 详细的安装步骤和系统要求
+- [快速开始](../getting-started/quickstart.md) - 5 分钟快速上手教程
+
+### 使用文档
+- [使用手册](../user-guide/user-guide.md) - 完整的功能说明和操作指南
+- [API 参考](../user-guide/api-reference.md) - 所有命令和接口说明
+
+### 进阶文档
+- [设计原理](../advanced/design-principles.md) - 核心设计思路和技术选型
+- [性能优化](../advanced/performance.md) - 性能分析和优化建议
+- [问题排查](../advanced/troubleshooting.md) - 常见问题诊断和解决
+
+### 返回
+- [文档首页](../../README.md) - 返回文档导航页
 
 ## 参考资源
 

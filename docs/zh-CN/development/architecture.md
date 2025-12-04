@@ -981,11 +981,27 @@ tracing::error!(
 
 ## 相关文档
 
-- [开发环境搭建指南](./development-guide.md)
-- [贡献指南](./contributing.md)
-- [代码规范](./code-style.md)
-- [API 参考文档](../user-guide/api-reference.md)
-- [配置说明](../user-guide/configuration.md)
+### 开发文档
+- [开发指南](./development-guide.md) - 开发环境搭建和工作流程
+- [贡献指南](./contributing.md) - 如何参与项目贡献
+- [代码规范](./code-style.md) - 代码风格和最佳实践
+
+### 使用文档
+- [使用手册](../user-guide/user-guide.md) - 完整的功能说明和操作指南
+- [API 参考](../user-guide/api-reference.md) - 所有命令和接口说明
+- [配置说明](../user-guide/configuration.md) - 配置选项详解
+
+### 进阶文档
+- [设计原理](../advanced/design-principles.md) - 核心设计思路和技术选型
+- [性能优化](../advanced/performance.md) - 性能分析和优化建议
+- [问题排查](../advanced/troubleshooting.md) - 常见问题诊断和解决
+
+### 入门文档
+- [项目概览](../getting-started/README.md) - 了解项目的基本信息
+- [快速开始](../getting-started/quickstart.md) - 5 分钟快速上手教程
+
+### 返回
+- [文档首页](../../README.md) - 返回文档导航页
 
 ## 参考资源
 

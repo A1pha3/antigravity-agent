@@ -589,8 +589,18 @@ sudo rpm -e antigravity-agent
 
 ## 相关文档
 
-- [快速开始](quickstart.md)
-- [使用手册](../user-guide/user-guide.md)
-- [配置说明](../user-guide/configuration.md)
-- [问题排查](../advanced/troubleshooting.md)
-- [FAQ](../advanced/faq.md)
+### 下一步
+- [快速开始](quickstart.md) - 5 分钟快速上手教程
+- [使用手册](../user-guide/user-guide.md) - 完整的功能说明和操作指南
+
+### 配置和设置
+- [配置说明](../user-guide/configuration.md) - 配置选项详解
+- [使用示例](../user-guide/examples.md) - 常见场景示例
+
+### 问题解决
+- [问题排查](../advanced/troubleshooting.md) - 常见问题诊断和解决
+- [FAQ](../advanced/faq.md) - 常见问题解答
+
+### 返回
+- [项目概览](README.md) - 了解项目的基本信息
+- [文档首页](../../README.md) - 返回文档导航页
