@@ -9,6 +9,9 @@ use std::fs;
 use std::path::PathBuf;
 use chrono::{DateTime, Local};
 
+// 导入加密备份读取函数
+use crate::antigravity::backup::read_backup_file;
+
 /// 切换 Antigravity 账户
 #[tauri::command]
 #[instrument(fields(account_id = %account_id))]
@@ -99,7 +102,7 @@ pub async fn get_antigravity_accounts(
             return Ok(accounts);
         }
 
-        // 读取目录中的所有 JSON 文件
+        // 读取目录中的所有备份文件（支持 .enc 加密文件和 .json 明文文件）
         let entries = fs::read_dir(&antigravity_dir)
             .map_err(|e| format!("读取备份目录失败: {}", e))?;
 
@@ -107,27 +110,37 @@ pub async fn get_antigravity_accounts(
             let entry = entry.map_err(|e| format!("读取目录项失败: {}", e))?;
             let path = entry.path();
 
-            // 只处理 JSON 文件
-            if path.extension().is_some_and(|ext| ext == "json") {
-                let file_name = match path.file_stem() {
-                    Some(name) => name.to_string_lossy().to_string(),
-                    None => continue,
-                };
+            // 处理 .enc（加密）和 .json（明文）文件
+            let ext = path.extension().and_then(|e| e.to_str());
+            if !matches!(ext, Some("enc") | Some("json")) {
+                continue;
+            }
 
-                tracing::debug!("📄 正在解析备份文件: {}", file_name);
+            let file_name = match path.file_stem() {
+                Some(name) => name.to_string_lossy().to_string(),
+                None => continue,
+            };
 
-                // 读取并解析 JSON 文件
-                let content = fs::read_to_string(&path)
-                    .map_err(|e| format!("读取文件失败 {}: {}", file_name, e))?;
+            tracing::debug!("📄 正在解析备份文件: {} ({})", file_name, ext.unwrap_or("unknown"));
 
-                let backup_data: Value = from_str(&content)
-                    .map_err(|e| format!("解析 JSON 失败 {}: {}", file_name, e))?;
+            // 使用统一的备份读取函数（自动处理加密/明文）
+            let backup_data: Value = match read_backup_file(&path) {
+                Ok(data) => data,
+                Err(e) => {
+                    tracing::warn!("⚠️ 读取备份文件失败 {}: {}", file_name, e);
+                    continue;
+                }
+            };
 
-                // 提取账户信息
-                let account = parse_backup_to_account(&backup_data, &file_name, &path)?;
-                accounts.push(account);
-
-                tracing::info!("✅ 成功解析账户: {}", file_name);
+            // 提取账户信息
+            match parse_backup_to_account(&backup_data, &file_name, &path) {
+                Ok(account) => {
+                    accounts.push(account);
+                    tracing::info!("✅ 成功解析账户: {}", file_name);
+                }
+                Err(e) => {
+                    tracing::warn!("⚠️ 解析账户失败 {}: {}", file_name, e);
+                }
             }
         }
 
@@ -454,12 +467,25 @@ pub async fn clear_all_antigravity_data() -> Result<String, String> {
 pub async fn restore_antigravity_account(account_name: String) -> Result<String, String> {
     tracing::debug!(target: "account::restore", account_name = %account_name, "调用 restore_antigravity_account");
 
-    // 1. 构建备份文件路径
+    // 1. 构建备份文件路径（优先使用加密文件）
     let config_dir = dirs::config_dir()
         .unwrap_or_else(|| std::path::PathBuf::from("."))
         .join(".antigravity-agent")
         .join("antigravity-accounts");
-    let backup_file = config_dir.join(format!("{}.json", account_name));
+    
+    // 优先查找加密文件 (.enc)，如果不存在则查找明文文件 (.json)
+    let encrypted_file = config_dir.join(format!("{}.enc", account_name));
+    let legacy_file = config_dir.join(format!("{}.json", account_name));
+    
+    let backup_file = if encrypted_file.exists() {
+        tracing::debug!(target: "account::restore", "使用加密备份文件");
+        encrypted_file
+    } else if legacy_file.exists() {
+        tracing::warn!(target: "account::restore", "使用明文备份文件（建议重新备份以加密）");
+        legacy_file
+    } else {
+        return Err(format!("备份文件不存在: {}", account_name));
+    };
 
     // 2. 调用统一的恢复函数
     crate::antigravity::restore::restore_all_antigravity_data(backup_file).await

@@ -296,12 +296,26 @@ pub async fn restore_backup_files(
 /// 删除指定备份
 #[tauri::command]
 pub async fn delete_backup(name: String, state: State<'_, AppState>) -> Result<String, String> {
-    // 只删除Antigravity账户JSON文件
+    // 删除 Antigravity 账户备份文件（支持 .enc 和 .json 格式）
     let antigravity_dir = state.config_dir.join("antigravity-accounts");
-    let antigravity_file = antigravity_dir.join(format!("{}.json", name));
+    let encrypted_file = antigravity_dir.join(format!("{}.enc", name));
+    let legacy_file = antigravity_dir.join(format!("{}.json", name));
 
-    if antigravity_file.exists() {
-        fs::remove_file(&antigravity_file).map_err(|e| format!("删除用户文件失败: {}", e))?;
+    let mut deleted = false;
+
+    // 删除加密文件
+    if encrypted_file.exists() {
+        fs::remove_file(&encrypted_file).map_err(|e| format!("删除加密备份失败: {}", e))?;
+        deleted = true;
+    }
+
+    // 删除明文文件（如果存在）
+    if legacy_file.exists() {
+        fs::remove_file(&legacy_file).map_err(|e| format!("删除明文备份失败: {}", e))?;
+        deleted = true;
+    }
+
+    if deleted {
         Ok(format!("删除用户成功: {}", name))
     } else {
         Err("用户文件不存在".to_string())
@@ -322,8 +336,9 @@ pub async fn clear_all_backups(state: State<'_, AppState>) -> Result<String, Str
             let entry = entry.map_err(|e| format!("读取目录项失败: {}", e))?;
             let path = entry.path();
 
-            // 只删除 JSON 文件
-            if path.extension().is_some_and(|ext| ext == "json") {
+            // 删除 .enc（加密）和 .json（明文）文件
+            let ext = path.extension().and_then(|e| e.to_str());
+            if matches!(ext, Some("enc") | Some("json")) {
                 fs::remove_file(&path)
                     .map_err(|e| format!("删除文件 {} 失败: {}", path.display(), e))?;
                 deleted_count += 1;
