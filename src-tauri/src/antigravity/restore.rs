@@ -1,5 +1,6 @@
 // Antigravity 用户数据恢复模块
 // 负责将备份数据恢复到 Antigravity 应用数据库
+// 支持加密和明文备份文件
 
 use rusqlite::{params, Connection, OptionalExtension};
 use serde_json::{json, Value};
@@ -9,6 +10,7 @@ use std::path::PathBuf;
 // 导入相关模块
 use crate::constants::database;
 use crate::platform;
+use crate::antigravity::backup::read_backup_file;
 
 /// 从备份的 Marker 中获取 Key 对应的 flag (0 或 1)
 /// 如果找不到，回退到安全默认值
@@ -219,17 +221,17 @@ fn restore_database(
 /// - `Ok(message)`: 成功消息
 /// - `Err(message)`: 错误信息
 pub async fn restore_all_antigravity_data(backup_file_path: PathBuf) -> Result<String, String> {
-    println!("🚀 开始执行智能恢复（从备份 Marker 读取精确值）...");
+    println!("🚀 开始执行智能恢复（支持加密备份）...");
     println!("📂 备份文件: {}", backup_file_path.display());
 
     if !backup_file_path.exists() {
         return Err(format!("备份文件不存在: {}", backup_file_path.display()));
     }
 
-    let content = fs::read_to_string(&backup_file_path).map_err(|e| e.to_string())?;
-    let backup_data: Value = serde_json::from_str(&content).map_err(|e| e.to_string())?;
+    // 使用统一的备份读取函数（自动处理加密/明文）
+    let backup_data: Value = read_backup_file(&backup_file_path)?;
 
-    println!("✅ 备份文件读取成功");
+    println!("✅ 备份文件读取成功（已自动解密）");
 
     let app_data = match platform::get_antigravity_db_path() {
         Some(p) => p,
