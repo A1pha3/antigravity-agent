@@ -59,6 +59,19 @@ export function AppUserPanel() {
     antigravityAccount.updateCurrentAccount()
   }, [antigravityAccount.users, isLanguageServerStateInitialized]);
 
+  // 定时从数据库刷新当前用户的配额数据（每 30 秒）
+  useEffect(() => {
+    // 立即获取一次
+    languageServerUserInfo.fetchCurrentUserData();
+
+    // 设置定时刷新
+    const intervalId = setInterval(() => {
+      languageServerUserInfo.fetchCurrentUserData();
+    }, 30000); // 30 秒刷新一次
+
+    return () => clearInterval(intervalId);
+  }, []);
+
   // 获取当前用户的配额数据
   const currentQuotaData = currentAntigravityAccount && languageServerUserInfo.users[currentAntigravityAccount?.id]?.userStatus
     ? languageServerUserInfo.users[currentAntigravityAccount.id].userStatus.cascadeModelConfigData.clientModelConfigs

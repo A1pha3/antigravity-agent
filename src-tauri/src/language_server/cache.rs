@@ -161,39 +161,69 @@ fn find_csrf_token_from_memory() -> Result<String> {
         .expect("valid uuid regex");
 
     let pids = collect_antigravity_pids();
+    tracing::info!("找到 {} 个目标进程: {:?}", pids.len(), pids);
+    
     if pids.is_empty() {
-        return Err(anyhow!("未找到运行中的 Antigravity 进程"));
+        return Err(anyhow!("未找到运行中的 Antigravity/Windsurf 进程"));
     }
 
-    for pid in pids {
+    for pid in &pids {
         let patterns = get_search_patterns();
+        tracing::info!("正在扫描进程 PID: {}", pid);
         
         #[cfg(target_os = "windows")]
         {
             use crate::language_server::windows::scan_process_for_token;
-            if let Ok(Some(token)) = scan_process_for_token(pid, &uuid_re, &patterns) {
-                return Ok(token);
+            match scan_process_for_token(*pid, &uuid_re, &patterns) {
+                Ok(Some(token)) => {
+                    tracing::info!("在进程 {} 中找到 CSRF token", pid);
+                    return Ok(token);
+                }
+                Ok(None) => {
+                    tracing::info!("进程 {} 中未找到 token", pid);
+                }
+                Err(e) => {
+                    tracing::warn!("扫描进程 {} 失败: {}", pid, e);
+                }
             }
         }
 
         #[cfg(target_os = "linux")]
         {
             use crate::language_server::linux::scan_process_for_token;
-            if let Ok(Some(token)) = scan_process_for_token(pid, &uuid_re, &patterns) {
-                return Ok(token);
+            match scan_process_for_token(*pid, &uuid_re, &patterns) {
+                Ok(Some(token)) => {
+                    tracing::info!("在进程 {} 中找到 CSRF token", pid);
+                    return Ok(token);
+                }
+                Ok(None) => {
+                    tracing::info!("进程 {} 中未找到 token", pid);
+                }
+                Err(e) => {
+                    tracing::warn!("扫描进程 {} 失败: {}", pid, e);
+                }
             }
         }
 
         #[cfg(target_os = "macos")]
         {
             use crate::language_server::macos::scan_process_for_token;
-            if let Ok(Some(token)) = scan_process_for_token(pid, &uuid_re, &patterns) {
-                return Ok(token);
+            match scan_process_for_token(*pid, &uuid_re, &patterns) {
+                Ok(Some(token)) => {
+                    tracing::info!("在进程 {} 中找到 CSRF token", pid);
+                    return Ok(token);
+                }
+                Ok(None) => {
+                    tracing::info!("进程 {} 中未找到 token", pid);
+                }
+                Err(e) => {
+                    tracing::warn!("扫描进程 {} 失败: {}", pid, e);
+                }
             }
         }
     }
 
-    Err(anyhow!("未在 Antigravity 进程内存中找到 CSRF token"))
+    Err(anyhow!("未在 {} 个 Antigravity/Windsurf 进程内存中找到 CSRF token", pids.len()))
 }
 
 /// 从日志文件解析端口信息
@@ -217,7 +247,7 @@ fn parse_ports_from_log_sync() -> PortInfo {
     }
 }
 
-/// 收集 Antigravity 进程 PID
+/// 收集 Antigravity/Windsurf 进程 PID
 fn collect_antigravity_pids() -> Vec<u32> {
     use sysinfo::System;
 
@@ -225,14 +255,27 @@ fn collect_antigravity_pids() -> Vec<u32> {
     system.refresh_processes();
 
     let mut pids = Vec::new();
+    let mut all_process_names: Vec<String> = Vec::new();
 
     for (pid, process) in system.processes() {
-        let name = process.name();
-        if name == "Antigravity.exe" ||name == "antigravity" || name.contains("Antigravity") {
+        let name = process.name().to_string();
+        let normalized = name.trim().to_ascii_lowercase();
+        let normalized = normalized.trim_end_matches(".exe");
+        
+        // 收集所有进程名用于调试
+        if normalized.contains("anti") || normalized.contains("wind") || normalized.contains("cursor") || normalized.contains("code") {
+            all_process_names.push(format!("{}({})", name, pid.as_u32()));
+        }
+        
+        if normalized.contains("antigravity") || normalized.contains("windsurf") {
             pids.push(pid.as_u32());
         }
     }
 
+    tracing::info!("相关进程列表: {:?}", all_process_names);
+
+    // PID 倒序：优先扫描最新启动的进程
+    pids.sort_unstable_by(|a, b| b.cmp(a));
     pids
 }
 

@@ -137,3 +137,37 @@ pub async fn initialize_language_server_cache() -> Result<CacheInitResult, Strin
     tracing::info!("缓存初始化完成: {}", result.message);
     Ok(result)
 }
+
+/// 直接从 Antigravity 数据库读取用户状态（不需要 CSRF token）
+/// 返回 userStatusProtoBinaryBase64 字段
+#[tauri::command]
+pub async fn get_user_status_from_db() -> Result<serde_json::Value, String> {
+    use rusqlite::Connection;
+    
+    // 获取 Antigravity 数据库路径
+    let db_path = crate::platform::get_antigravity_db_path()
+        .ok_or_else(|| "未找到 Antigravity 数据库".to_string())?;
+    
+    if !db_path.exists() {
+        return Err(format!("Antigravity 数据库不存在: {}", db_path.display()));
+    }
+    
+    // 连接数据库
+    let conn = Connection::open(&db_path)
+        .map_err(|e| format!("连接数据库失败: {}", e))?;
+    
+    // 查询 antigravityAuthStatus
+    let auth_json: String = conn
+        .query_row(
+            "SELECT value FROM ItemTable WHERE key = 'antigravityAuthStatus'",
+            [],
+            |row| row.get(0),
+        )
+        .map_err(|e| format!("查询认证信息失败: {}", e))?;
+    
+    // 解析 JSON
+    let auth_data: serde_json::Value = serde_json::from_str(&auth_json)
+        .map_err(|e| format!("解析认证信息失败: {}", e))?;
+    
+    Ok(auth_data)
+}

@@ -169,6 +169,7 @@ fn main() {
             write_frontend_log,
             // Antigravity 语言服务器接口
             language_server_get_user_status,
+            get_user_status_from_db,
             clear_all_cache_command,
             get_cache_stats_command,
             initialize_language_server_cache,

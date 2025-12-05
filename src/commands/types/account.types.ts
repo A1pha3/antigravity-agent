@@ -44,4 +44,7 @@ export interface AntigravityAccount {
 
   /** 最后切换时间 */
   last_switched: string;
+
+  /** Base64 编码的用户状态 protobuf 数据（包含配额信息） */
+  user_status_proto?: string;
 }

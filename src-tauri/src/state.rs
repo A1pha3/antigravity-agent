@@ -23,6 +23,8 @@ pub struct AntigravityAccount {
     pub user_settings: String, // 编码后的用户设置
     pub created_at: String,
     pub last_switched: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub user_status_proto: Option<String>, // Base64 编码的用户状态 protobuf 数据
 }
 
 #[derive(Debug, Serialize, Deserialize)]

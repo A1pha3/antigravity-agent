@@ -210,7 +210,7 @@ fn parse_backup_to_account(
         .and_then(|v| v.as_str());
 
     // 解析认证状态 JSON（如果存在）
-    let (name, api_key) = if let Some(auth_json) = auth_status {
+    let (name, api_key, user_status_proto) = if let Some(auth_json) = auth_status {
         match from_str::<Value>(auth_json) {
             Ok(auth_data) => {
                 let name = auth_data
@@ -227,18 +227,24 @@ fn parse_backup_to_account(
                     .unwrap_or("")
                     .to_string();
 
-                (name, api_key)
+                // 提取用户状态 protobuf 数据（包含配额信息）
+                let user_status_proto = auth_data
+                    .get("userStatusProtoBinaryBase64")
+                    .and_then(|v| v.as_str())
+                    .map(|s| s.to_string());
+
+                (name, api_key, user_status_proto)
             }
             Err(_) => {
                 // 解析失败，使用默认值
                 let name = email.split('@').next().unwrap_or(&email).to_string();
-                (name, "".to_string())
+                (name, "".to_string(), None)
             }
         }
     } else {
         // 没有认证信息，使用默认值
         let name = email.split('@').next().unwrap_or(&email).to_string();
-        (name, "".to_string())
+        (name, "".to_string(), None)
     };
 
     // 提取用户设置
@@ -274,6 +280,7 @@ fn parse_backup_to_account(
         user_settings,
         created_at,
         last_switched,
+        user_status_proto,
     })
 }
 
