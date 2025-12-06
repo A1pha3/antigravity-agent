@@ -1,10 +1,12 @@
 use anyhow::{anyhow, Context, Result};
 use read_process_memory::{CopyAddress, Pid, ProcessHandle};
 use regex::Regex;
-use std::fs;
 use std::convert::TryInto;
+use std::fs;
 
-use crate::language_server::utils::{search_bytes_for_token, CHUNK_SIZE, SCAN_AHEAD, MAX_REGION_BYTES};
+use crate::language_server::utils::{
+    search_bytes_for_token, CHUNK_SIZE, MAX_REGION_BYTES, SCAN_AHEAD,
+};
 
 #[derive(Debug)]
 struct Region {
@@ -30,7 +32,9 @@ pub(super) fn scan_process_for_token(
                 }
                 let mut segs = range.split('-');
                 if let (Some(s), Some(e)) = (segs.next(), segs.next()) {
-                    if let (Ok(start), Ok(end)) = (u64::from_str_radix(s, 16), u64::from_str_radix(e, 16)) {
+                    if let (Ok(start), Ok(end)) =
+                        (u64::from_str_radix(s, 16), u64::from_str_radix(e, 16))
+                    {
                         if end > start {
                             regions.push(Region { start, end });
                         }
@@ -40,7 +44,9 @@ pub(super) fn scan_process_for_token(
         }
     }
 
-    let handle: ProcessHandle = (pid as Pid).try_into().map_err(|e| anyhow!("打开进程用于读取失败: {e}"))?;
+    let handle: ProcessHandle = (pid as Pid)
+        .try_into()
+        .map_err(|e| anyhow!("打开进程用于读取失败: {e}"))?;
 
     let overlap = patterns.0.len().max(patterns.1.len()) + SCAN_AHEAD;
 

@@ -2,13 +2,13 @@ use std::cmp::min;
 use std::path::PathBuf;
 
 use anyhow::{anyhow, Result};
-use regex::Regex;
-use sysinfo::{System};
-use walkdir::WalkDir;
 use read_process_memory as _;
+use regex::Regex;
+use sysinfo::System;
+use walkdir::WalkDir;
 
 use super::cache::get_cache_manager;
-use super::types::{PortInfo, CacheInitResult};
+use super::types::{CacheInitResult, PortInfo};
 
 #[cfg(target_os = "windows")]
 use crate::language_server::windows::scan_process_for_token;
@@ -22,7 +22,6 @@ use crate::language_server::macos::scan_process_for_token;
 pub(crate) const SCAN_AHEAD: usize = 200;
 pub(crate) const CHUNK_SIZE: usize = 512 * 1024; // 512KB 分块读取，降低单次读耗时
 pub(crate) const MAX_REGION_BYTES: usize = 64 * 1024 * 1024; // 每个区域最多扫描 64MB，加速
-
 
 /// 查找最新的 Antigravity.log（按修改时间）
 pub fn find_latest_antigravity_log() -> Option<PathBuf> {
@@ -40,7 +39,11 @@ pub fn find_latest_antigravity_log() -> Option<PathBuf> {
         if !root.exists() {
             continue;
         }
-        if let Ok(entries) = WalkDir::new(root).max_depth(6).into_iter().collect::<Result<Vec<_>, _>>() {
+        if let Ok(entries) = WalkDir::new(root)
+            .max_depth(6)
+            .into_iter()
+            .collect::<Result<Vec<_>, _>>()
+        {
             for entry in entries {
                 let path = entry.path();
                 if path.file_name().is_some_and(|n| n == "Antigravity.log") && path.is_file() {
@@ -143,7 +146,11 @@ pub(crate) fn find_all_positions(haystack: &[u8], needle: &[u8]) -> Vec<usize> {
     positions
 }
 
-pub(crate) fn search_bytes_for_token(data: &[u8], uuid_re: &Regex, patterns: &(Vec<u8>, Vec<u8>)) -> Option<String> {
+pub(crate) fn search_bytes_for_token(
+    data: &[u8],
+    uuid_re: &Regex,
+    patterns: &(Vec<u8>, Vec<u8>),
+) -> Option<String> {
     let (pat_utf8, pat_utf16) = patterns;
 
     for pat in [pat_utf8, pat_utf16] {
@@ -176,7 +183,6 @@ pub(crate) fn search_bytes_for_token(data: &[u8], uuid_re: &Regex, patterns: &(V
     None
 }
 
-
 /// 带 CSRF token 缓存的获取函数（使用 moka）
 pub async fn get_csrf_token_with_cache() -> Result<String> {
     let cache = get_cache_manager();
@@ -196,7 +202,8 @@ pub async fn get_csrf_token_with_cache() -> Result<String> {
     let token = tokio::task::spawn_blocking(move || {
         // 直接调用原始函数，不在闭包内定义
         find_csrf_token_from_memory_direct()
-    }).await??;
+    })
+    .await??;
 
     let scan_duration = start_time.elapsed();
     tracing::info!("CSRF token 扫描完成，耗时: {:?}", scan_duration);
@@ -210,8 +217,9 @@ pub async fn get_csrf_token_with_cache() -> Result<String> {
 /// 直接获取 CSRF token（不使用缓存的底层函数）
 fn find_csrf_token_from_memory_direct() -> Result<String> {
     // 将原始函数的逻辑复制到这里，避免在闭包中调用
-    let uuid_re = Regex::new(r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
-        .expect("valid uuid regex");
+    let uuid_re =
+        Regex::new(r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
+            .expect("valid uuid regex");
     let patterns = get_patterns();
 
     let pids = collect_target_pids();
@@ -230,7 +238,9 @@ fn find_csrf_token_from_memory_direct() -> Result<String> {
         }
     }
 
-    Err(anyhow!("未在运行中的 Antigravity/Windsurf 进程内存中找到 CSRF token"))
+    Err(anyhow!(
+        "未在运行中的 Antigravity/Windsurf 进程内存中找到 CSRF token"
+    ))
 }
 
 /// 获取端口信息（带缓存）
@@ -255,8 +265,8 @@ pub async fn get_ports_with_cache() -> Result<PortInfo> {
             .ok_or_else(|| anyhow!("未找到 Antigravity.log，无法确定端口"))?;
 
         // 2) 读取日志内容
-        let content = std::fs::read_to_string(&log_path)
-            .map_err(|e| anyhow!("读取日志失败: {e}"))?;
+        let content =
+            std::fs::read_to_string(&log_path).map_err(|e| anyhow!("读取日志失败: {e}"))?;
 
         // 3) 解析端口信息
         let (https_port, http_port, extension_port) = parse_ports_from_log(&content);
@@ -267,7 +277,8 @@ pub async fn get_ports_with_cache() -> Result<PortInfo> {
             extension_port,
             log_path: Some(log_path.to_string_lossy().to_string()),
         })
-    }).await??;
+    })
+    .await??;
 
     let parse_duration = start_time.elapsed();
     tracing::info!("端口信息解析完成，耗时: {:?}", parse_duration);
@@ -277,8 +288,6 @@ pub async fn get_ports_with_cache() -> Result<PortInfo> {
 
     Ok(port_info)
 }
-
-
 
 /// 初始化锁，防止并发初始化
 static INIT_LOCK: std::sync::OnceLock<tokio::sync::Mutex<()>> = std::sync::OnceLock::new();
@@ -352,8 +361,10 @@ async fn perform_cache_initialization() -> CacheInitResult {
         if csrf_loaded && ports_loaded {
             format!("缓存初始化成功 ({}ms)", duration_ms)
         } else {
-            format!("缓存部分初始化成功 ({}ms) - CSRF: {}, 端口: {}",
-                duration_ms, csrf_loaded, ports_loaded)
+            format!(
+                "缓存部分初始化成功 ({}ms) - CSRF: {}, 端口: {}",
+                duration_ms, csrf_loaded, ports_loaded
+            )
         }
     } else {
         format!("缓存初始化失败 ({}ms) - {}", duration_ms, errors.join("; "))

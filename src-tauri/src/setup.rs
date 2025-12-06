@@ -1,6 +1,6 @@
-use tauri::{App, Manager};
+use crate::{app_settings, db_monitor, system_tray, window};
 use std::sync::Arc;
-use crate::{app_settings, system_tray, db_monitor, window};
+use tauri::{App, Manager};
 
 pub fn init(app: &mut App) -> std::result::Result<(), Box<dyn std::error::Error>> {
     tracing::info!(target: "app::setup", "开始应用程序设置");
@@ -19,8 +19,7 @@ pub fn init(app: &mut App) -> std::result::Result<(), Box<dyn std::error::Error>
     {
         if let Some(window) = app.get_webview_window("main") {
             // Tauri 2.x 中禁用上下文菜单需要通过eval执行JavaScript
-            let _ = window
-                .eval("window.addEventListener('contextmenu', e => e.preventDefault());");
+            let _ = window.eval("window.addEventListener('contextmenu', e => e.preventDefault());");
         }
     }
 
@@ -28,7 +27,9 @@ pub fn init(app: &mut App) -> std::result::Result<(), Box<dyn std::error::Error>
     let system_tray = app.state::<system_tray::SystemTrayManager>();
     match system_tray.initialize(app.handle()) {
         Ok(_) => tracing::info!(target: "app::setup::tray", "系统托盘管理器初始化成功"),
-        Err(e) => tracing::error!(target: "app::setup::tray", error = %e, "系统托盘管理器初始化失败"),
+        Err(e) => {
+            tracing::error!(target: "app::setup::tray", error = %e, "系统托盘管理器初始化失败")
+        }
     }
 
     // 初始化数据库监控器

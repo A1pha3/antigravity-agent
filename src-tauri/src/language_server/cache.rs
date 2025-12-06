@@ -3,11 +3,11 @@
 //! 提供 CSRF Token 和端口信息的缓存管理
 //! 使用 moka 实现异步缓存，手动管理失效
 
-use std::sync::Arc;
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 use regex::Regex;
+use std::sync::Arc;
 
-use super::types::{PortInfo, CacheStats, CacheConfig};
+use super::types::{CacheConfig, CacheStats, PortInfo};
 use super::utils::{find_latest_antigravity_log, parse_ports_from_log};
 
 /// 缓存管理器
@@ -26,13 +26,9 @@ impl CacheManager {
 
     pub fn with_config(config: CacheConfig) -> Self {
         Self {
-            csrf_cache: Arc::new(
-                moka::future::CacheBuilder::new(config.max_cache_entries)
-                    .build()
-            ),
+            csrf_cache: Arc::new(moka::future::CacheBuilder::new(config.max_cache_entries).build()),
             ports_cache: Arc::new(
-                moka::future::CacheBuilder::new(config.max_cache_entries)
-                    .build()
+                moka::future::CacheBuilder::new(config.max_cache_entries).build(),
             ),
         }
     }
@@ -59,7 +55,6 @@ impl CacheManager {
         tracing::info!("端口信息已缓存");
     }
 
-    
     /// 清空所有缓存
     pub fn clear_all(&self) {
         self.csrf_cache.invalidate_all();
@@ -81,9 +76,7 @@ static GLOBAL_CACHE: std::sync::OnceLock<Arc<CacheManager>> = std::sync::OnceLoc
 
 /// 获取全局缓存管理器
 pub fn get_cache_manager() -> &'static Arc<CacheManager> {
-    GLOBAL_CACHE.get_or_init(|| {
-        Arc::new(CacheManager::new())
-    })
+    GLOBAL_CACHE.get_or_init(|| Arc::new(CacheManager::new()))
 }
 
 // ========== 高级 API（业务逻辑）==========
@@ -104,9 +97,7 @@ pub async fn get_csrf_token() -> Result<String> {
 
     // 缓存未命中，扫描内存
     tracing::info!("缓存未命中，开始扫描内存");
-    let token = tokio::task::spawn_blocking(|| {
-        find_csrf_token_from_memory()
-    }).await??;
+    let token = tokio::task::spawn_blocking(|| find_csrf_token_from_memory()).await??;
 
     // 缓存并返回
     cache.set_csrf_token("csrf_token", token.clone()).await;
@@ -156,9 +147,9 @@ pub fn get_stats() -> CacheStats {
 
 /// 从进程内存中查找 CSRF token
 fn find_csrf_token_from_memory() -> Result<String> {
-    
-    let uuid_re = Regex::new(r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
-        .expect("valid uuid regex");
+    let uuid_re =
+        Regex::new(r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
+            .expect("valid uuid regex");
 
     let pids = collect_antigravity_pids();
     if pids.is_empty() {
@@ -167,7 +158,7 @@ fn find_csrf_token_from_memory() -> Result<String> {
 
     for pid in pids {
         let patterns = get_search_patterns();
-        
+
         #[cfg(target_os = "windows")]
         {
             use crate::language_server::windows::scan_process_for_token;
@@ -199,20 +190,18 @@ fn find_csrf_token_from_memory() -> Result<String> {
 /// 从日志文件解析端口信息
 fn parse_ports_from_log_sync() -> PortInfo {
     match find_latest_antigravity_log() {
-        Some(log_path) => {
-            match std::fs::read_to_string(&log_path) {
-                Ok(content) => {
-                    let (https_port, http_port, extension_port) = parse_ports_from_log(&content);
-                    PortInfo {
-                        https_port,
-                        http_port,
-                        extension_port,
-                        log_path: Some(log_path.to_string_lossy().to_string()),
-                    }
+        Some(log_path) => match std::fs::read_to_string(&log_path) {
+            Ok(content) => {
+                let (https_port, http_port, extension_port) = parse_ports_from_log(&content);
+                PortInfo {
+                    https_port,
+                    http_port,
+                    extension_port,
+                    log_path: Some(log_path.to_string_lossy().to_string()),
                 }
-                Err(_) => PortInfo::default(),
             }
-        }
+            Err(_) => PortInfo::default(),
+        },
         None => PortInfo::default(),
     }
 }
@@ -228,7 +217,7 @@ fn collect_antigravity_pids() -> Vec<u32> {
 
     for (pid, process) in system.processes() {
         let name = process.name();
-        if name == "Antigravity.exe" ||name == "antigravity" || name.contains("Antigravity") {
+        if name == "Antigravity.exe" || name == "antigravity" || name.contains("Antigravity") {
             pids.push(pid.as_u32());
         }
     }
@@ -243,4 +232,3 @@ fn get_search_patterns() -> (Vec<u8>, Vec<u8>) {
     let pat_utf16: Vec<u8> = key.encode_utf16().flat_map(|c| c.to_le_bytes()).collect();
     (pat_utf8, pat_utf16)
 }
-

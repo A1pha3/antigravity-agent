@@ -1,25 +1,22 @@
 use std::time::Duration;
 
-use super::cache::{get_csrf_token, get_ports, clear_all, get_stats};
-use super::types::{
-    RequestMetadata, UserStatusRequest, HttpConfig, CacheInitResult
-};
+use super::cache::{clear_all, get_csrf_token, get_ports, get_stats};
+use super::types::{CacheInitResult, HttpConfig, RequestMetadata, UserStatusRequest};
 use super::utils::initialize_cache;
 
 /// 前端调用 GetUserStatus 的公开命令
 #[tauri::command]
-pub async fn language_server_get_user_status(
-    api_key: String,
-) -> Result<serde_json::Value, String> {
-
+pub async fn language_server_get_user_status(api_key: String) -> Result<serde_json::Value, String> {
     if api_key.trim().is_empty() {
         return Err("apiKey 不能为空".to_string());
     }
 
     // 1) 获取端口信息
-    let port_info = get_ports().await
+    let port_info = get_ports()
+        .await
         .map_err(|e| format!("获取端口信息失败: {e}"))?;
-    let port = port_info.https_port
+    let port = port_info
+        .https_port
         .ok_or_else(|| "端口信息中未找到 HTTPS 端口".to_string())?;
 
     // 2) 构造 URL 和请求体
@@ -41,11 +38,12 @@ pub async fn language_server_get_user_status(
     };
 
     let request_body = UserStatusRequest { metadata };
-    let body_bytes = serde_json::to_vec(&request_body)
-        .map_err(|e| format!("序列化请求体失败: {e}"))?;
+    let body_bytes =
+        serde_json::to_vec(&request_body).map_err(|e| format!("序列化请求体失败: {e}"))?;
 
     // 获取 CSRF token
-    let csrf = get_csrf_token().await
+    let csrf = get_csrf_token()
+        .await
         .map_err(|e| format!("提取 csrf_token 失败: {e}"))?;
 
     let mut req = client.post(&target_url);
@@ -57,14 +55,16 @@ pub async fn language_server_get_user_status(
         .header("connect-protocol-version", "1")
         .header("content-type", "application/json")
         .header("priority", "u=1, i")
-        .header("sec-ch-ua", "\"Not)A;Brand\";v=\"8\", \"Chromium\";v=\"138\"")
+        .header(
+            "sec-ch-ua",
+            "\"Not)A;Brand\";v=\"8\", \"Chromium\";v=\"138\"",
+        )
         .header("sec-ch-ua-mobile", "?0")
         .header("sec-ch-ua-platform", "\"Windows\"")
         .header("sec-fetch-dest", "empty")
         .header("sec-fetch-mode", "cors")
         .header("sec-fetch-site", "cross-site")
         .header("x-codeium-csrf-token", csrf.clone());
-
 
     // 打印完整的请求信息
     let _body_str = String::from_utf8_lossy(&body_bytes);
@@ -104,12 +104,15 @@ pub async fn language_server_get_user_status(
         .map_err(|e| format!("读取响应失败: {e}"))?;
 
     // 直接解析为 JSON，不定义复杂的数据结构
-    let json: serde_json::Value = serde_json::from_slice(&bytes)
-        .map_err(|e| format!("解析 JSON 失败: {e}; body={}", String::from_utf8_lossy(&bytes)))?;
+    let json: serde_json::Value = serde_json::from_slice(&bytes).map_err(|e| {
+        format!(
+            "解析 JSON 失败: {e}; body={}",
+            String::from_utf8_lossy(&bytes)
+        )
+    })?;
 
     Ok(json)
 }
-
 
 /// 清空所有缓存命令
 #[tauri::command]
@@ -125,7 +128,11 @@ pub async fn clear_all_cache_command() -> Result<(), String> {
 pub fn get_cache_stats_command() -> Result<super::types::CacheStats, String> {
     tracing::info!("收到获取缓存统计信息请求");
     let stats = get_stats();
-    tracing::info!("缓存统计: CSRF={}, 端口={}", stats.csrf_cache_size, stats.ports_cache_size);
+    tracing::info!(
+        "缓存统计: CSRF={}, 端口={}",
+        stats.csrf_cache_size,
+        stats.ports_cache_size
+    );
     Ok(stats)
 }
 

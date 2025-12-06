@@ -76,9 +76,11 @@ pub fn smart_backup_antigravity_account(email: &str) -> Result<(String, bool), S
         tracing::debug!(target: "backup::database", notification_count = %notification_keys.len(), "发现通知字段，开始备份");
         for notification_key in &notification_keys {
             let val: Option<String> = conn
-                .query_row("SELECT value FROM ItemTable WHERE key = ?", [notification_key], |row| {
-                    row.get(0)
-                })
+                .query_row(
+                    "SELECT value FROM ItemTable WHERE key = ?",
+                    [notification_key],
+                    |row| row.get(0),
+                )
                 .optional()
                 .unwrap_or(None);
 

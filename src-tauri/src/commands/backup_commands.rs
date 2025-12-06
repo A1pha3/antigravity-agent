@@ -154,14 +154,15 @@ pub async fn get_recent_accounts(
     let mut accounts_with_time: Vec<(String, std::time::SystemTime)> = Vec::new();
 
     // 读取所有账户文件并获取修改时间
-    for entry in fs::read_dir(&antigravity_dir).map_err(|e| format!("读取用户目录失败: {}", e))? {
+    for entry in fs::read_dir(&antigravity_dir).map_err(|e| format!("读取用户目录失败: {}", e))?
+    {
         let entry = entry.map_err(|e| format!("读取目录项失败: {}", e))?;
         let path = entry.path();
 
         if path.extension().is_some_and(|ext| ext == "json") {
             if let Some(name) = path.file_stem() {
                 let account_name = name.to_string_lossy().to_string();
-                
+
                 // 获取文件修改时间
                 match fs::metadata(&path) {
                     Ok(metadata) => {
@@ -190,7 +191,6 @@ pub async fn get_recent_accounts(
 
     Ok(result)
 }
-
 
 /// 收集所有备份文件的完整内容
 #[tauri::command]

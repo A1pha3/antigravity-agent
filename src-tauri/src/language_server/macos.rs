@@ -3,15 +3,17 @@ use mach2::kern_return::KERN_SUCCESS;
 use mach2::message::mach_msg_type_number_t;
 use mach2::port::mach_port_name_t;
 use mach2::traps::{mach_task_self, task_for_pid};
-use mach2::vm_types::{integer_t, mach_vm_address_t, mach_vm_size_t};
+use mach2::vm::mach_vm_region;
 use mach2::vm_prot::VM_PROT_READ;
 use mach2::vm_region::{vm_region_basic_info_data_64_t, VM_REGION_BASIC_INFO_64};
-use mach2::vm::mach_vm_region;
+use mach2::vm_types::{integer_t, mach_vm_address_t, mach_vm_size_t};
 use read_process_memory::{CopyAddress, Pid, ProcessHandle};
 use regex::Regex;
 use std::convert::TryInto;
 
-use crate::language_server::utils::{search_bytes_for_token, CHUNK_SIZE, SCAN_AHEAD, MAX_REGION_BYTES};
+use crate::language_server::utils::{
+    search_bytes_for_token, CHUNK_SIZE, MAX_REGION_BYTES, SCAN_AHEAD,
+};
 
 pub(super) fn scan_process_for_token(
     pid: u32,
@@ -21,10 +23,14 @@ pub(super) fn scan_process_for_token(
     let mut task: mach_port_name_t = 0;
     let kr = unsafe { task_for_pid(mach_task_self(), pid as i32, &mut task) };
     if kr != KERN_SUCCESS {
-        return Err(anyhow!("task_for_pid 失败，可能需要 sudo，kern_return={kr}"));
+        return Err(anyhow!(
+            "task_for_pid 失败，可能需要 sudo，kern_return={kr}"
+        ));
     }
     // 供读取的句柄（使用 read-process-memory 封装 mach_vm_read）
-    let handle: ProcessHandle = (pid as Pid).try_into().map_err(|e| anyhow!("打开进程用于读取失败: {e}"))?;
+    let handle: ProcessHandle = (pid as Pid)
+        .try_into()
+        .map_err(|e| anyhow!("打开进程用于读取失败: {e}"))?;
 
     let mut address: mach_vm_address_t = 0;
     let mut size: mach_vm_size_t = 0;

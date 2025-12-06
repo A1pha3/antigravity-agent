@@ -5,9 +5,9 @@ use tauri::{
     AppHandle, Manager,
 };
 
-use crate::app_settings::AppSettingsManager;
-use super::menu::build_menu;
 use super::events::handle_menu_event;
+use super::menu::build_menu;
+use crate::app_settings::AppSettingsManager;
 
 /// 系统托盘管理器
 pub struct SystemTrayManager {
@@ -36,7 +36,7 @@ impl SystemTrayManager {
         if settings.system_tray_enabled {
             // 初始化时异步创建图标
             let app_handle_clone = app_handle.clone();
-            
+
             // We can just spawn a task to do the async work
             tauri::async_runtime::spawn(async move {
                 let manager = app_handle_clone.state::<SystemTrayManager>();
@@ -137,7 +137,7 @@ impl SystemTrayManager {
 
         // 2. 构建菜单（这是一个异步操作，不能持有锁）
         let menu = build_menu(app_handle).await.map_err(|e| e.to_string())?;
-        
+
         // 3. 再次获取锁进行创建（双重检查）
         let mut tray_lock = self.tray_icon.lock().unwrap();
         if tray_lock.is_some() {
@@ -200,24 +200,24 @@ impl SystemTrayManager {
         if icon_path.exists() {
             if let Ok(icon_data) = std::fs::read(icon_path) {
                 if let Ok(image) = image::load_from_memory(&icon_data) {
-                     let rgba = image.to_rgba8();
-                     let (w, h) = rgba.dimensions();
-                     return Some(Image::new_owned(rgba.into_raw(), w, h));
+                    let rgba = image.to_rgba8();
+                    let (w, h) = rgba.dimensions();
+                    return Some(Image::new_owned(rgba.into_raw(), w, h));
                 }
             }
         }
         None
     }
-    
+
     /// 重建并更新菜单（用于账户列表更新）
     pub async fn update_menu(&self, app_handle: &AppHandle) -> Result<(), String> {
         // 1. 先构建菜单（异步操作，不持有锁）
         let menu = build_menu(app_handle).await.map_err(|e| e.to_string())?;
-        
+
         // 2. 获取锁并更新
         let tray_lock = self.tray_icon.lock().unwrap();
         if let Some(tray) = tray_lock.as_ref() {
-             tray.set_menu(Some(menu)).map_err(|e| e.to_string())?;
+            tray.set_menu(Some(menu)).map_err(|e| e.to_string())?;
         }
         Ok(())
     }

@@ -63,26 +63,29 @@ impl LogSanitizer {
     /// "very.long.email@domain.com" → "v***l@domain.com"
     /// ```
     pub fn sanitize_email(&self, input: &str) -> String {
-        self.email_regex.replace_all(input, |caps: &regex::Captures| {
-            let email = &caps[0];
+        self.email_regex
+            .replace_all(input, |caps: &regex::Captures| {
+                let email = &caps[0];
 
-            let at_pos = email.find('@').unwrap_or(0);
-            let (local_part, domain) = email.split_at(at_pos);
+                let at_pos = email.find('@').unwrap_or(0);
+                let (local_part, domain) = email.split_at(at_pos);
 
-            match local_part.len() {
-                0 | 1 => email.to_string(),
-                2 => {
-                    let first_char = local_part.chars().next().unwrap_or('_');
-                    format!("{}*{}", first_char, domain)
+                match local_part.len() {
+                    0 | 1 => email.to_string(),
+                    2 => {
+                        let first_char = local_part.chars().next().unwrap_or('_');
+                        format!("{}*{}", first_char, domain)
+                    }
+                    _ => {
+                        let first_char = local_part.chars().next().unwrap_or('_');
+                        let last_char = local_part.chars().last().unwrap_or('_');
+                        let middle_stars =
+                            "*".repeat(local_part.len().saturating_sub(2).saturating_sub(2));
+                        format!("{}{}{}@{}", first_char, middle_stars, last_char, domain)
+                    }
                 }
-                _ => {
-                    let first_char = local_part.chars().next().unwrap_or('_');
-                    let last_char = local_part.chars().last().unwrap_or('_');
-                    let middle_stars = "*".repeat(local_part.len().saturating_sub(2).saturating_sub(2));
-                    format!("{}{}{}@{}", first_char, middle_stars, last_char, domain)
-                }
-            }
-        }).to_string()
+            })
+            .to_string()
     }
 
     /// 路径脱敏 - 隐藏用户主目录部分
@@ -98,14 +101,16 @@ impl LogSanitizer {
         let mut result = input.to_string();
 
         // 处理 Linux/Unix 路径
-        result = self.user_home_regex.replace_all(&result, |_caps: &regex::Captures| {
-            "~"
-        }).to_string();
+        result = self
+            .user_home_regex
+            .replace_all(&result, |_caps: &regex::Captures| "~")
+            .to_string();
 
         // 处理 Windows 路径 - 修正正则表达式匹配用户名
-        result = self.windows_user_regex.replace_all(&result, |_caps: &regex::Captures| {
-            "~"
-        }).to_string();
+        result = self
+            .windows_user_regex
+            .replace_all(&result, |_caps: &regex::Captures| "~")
+            .to_string();
 
         // 额外处理一些可能遗漏的路径格式
         if result.contains("C:\\Users\\") {
@@ -127,22 +132,21 @@ impl LogSanitizer {
     /// "token: abcdef1234567890" → "token: ab****************"
     /// ```
     pub fn sanitize_api_keys(&self, input: &str) -> String {
-        self.api_key_regex.replace_all(input, |caps: &regex::Captures| {
-            let prefix = &caps["prefix"];
-            let key = &caps["key"];
-            let visible_len = std::cmp::min(4, key.len());
-            let masked_len = key.len().saturating_sub(visible_len);
+        self.api_key_regex
+            .replace_all(input, |caps: &regex::Captures| {
+                let prefix = &caps["prefix"];
+                let key = &caps["key"];
+                let visible_len = std::cmp::min(4, key.len());
+                let masked_len = key.len().saturating_sub(visible_len);
 
-            if key.len() <= 4 {
-                format!("{}{}", prefix, key)
-            } else {
-                let visible_part = &key[..visible_len];
-                let masked_part = "*".repeat(masked_len);
-                format!("{}{}{}", prefix, visible_part, masked_part)
-            }
-        }).to_string()
+                if key.len() <= 4 {
+                    format!("{}{}", prefix, key)
+                } else {
+                    let visible_part = &key[..visible_len];
+                    let masked_part = "*".repeat(masked_len);
+                    format!("{}{}{}", prefix, visible_part, masked_part)
+                }
+            })
+            .to_string()
     }
-
-
-  }
-
+}

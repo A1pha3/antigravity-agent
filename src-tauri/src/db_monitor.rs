@@ -130,13 +130,13 @@ impl DatabaseMonitor {
 
         if db_path.exists() {
             let conn = rusqlite::Connection::open(&db_path)?;
-            
+
             // 查询所有数据（完整的ItemTable）
             let mut stmt = conn.prepare("SELECT key, value FROM ItemTable ORDER BY key")?;
-            
-            let rows: Vec<(String, String)> = stmt.query_map([], |row| {
-                Ok((row.get(0)?, row.get(1)?))
-            })?.collect::<Result<Vec<_>, _>>()?;
+
+            let rows: Vec<(String, String)> = stmt
+                .query_map([], |row| Ok((row.get(0)?, row.get(1)?)))?
+                .collect::<Result<Vec<_>, _>>()?;
 
             // 构建完整数据对象
             for (key, value) in rows {
@@ -145,7 +145,7 @@ impl DatabaseMonitor {
                     Ok(parsed) => parsed,
                     Err(_) => Value::String(value.clone()),
                 };
-                
+
                 complete_data.insert(key, json_value);
             }
         }

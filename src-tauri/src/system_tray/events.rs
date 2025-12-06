@@ -1,5 +1,5 @@
-use tauri::{AppHandle, Manager};
 use super::manager::SystemTrayManager;
+use tauri::{AppHandle, Manager};
 
 /// 处理菜单事件
 pub async fn handle_menu_event(app: &AppHandle, event_id: &str) {
@@ -28,8 +28,10 @@ pub async fn handle_menu_event(app: &AppHandle, event_id: &str) {
             if let Some(account_name) = id.strip_prefix("switch_account:") {
                 println!("📋 菜单: 切换账户 -> {}", account_name);
                 let account_name = account_name.to_string();
-                
-                match crate::commands::account_commands::switch_to_antigravity_account(account_name).await {
+
+                match crate::commands::account_commands::switch_to_antigravity_account(account_name)
+                    .await
+                {
                     Ok(msg) => {
                         println!("✅ 账户切换成功: {}", msg);
                         let system_tray = app.state::<SystemTrayManager>();

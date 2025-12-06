@@ -70,8 +70,6 @@ pub struct UserStatusRequest {
     pub metadata: RequestMetadata,
 }
 
-
-
 /// 缓存配置常量
 pub struct CacheConfig {
     pub max_cache_entries: u64,

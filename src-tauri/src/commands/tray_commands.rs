@@ -1,5 +1,5 @@
-use tauri::Manager;
 use crate::system_tray::SystemTrayManager;
+use tauri::Manager;
 
 /// 启用系统托盘
 #[tauri::command]
@@ -22,7 +22,7 @@ pub async fn disable_system_tray(app: tauri::AppHandle) -> Result<String, String
 pub async fn toggle_system_tray(app: tauri::AppHandle) -> Result<serde_json::Value, String> {
     let system_tray = app.state::<SystemTrayManager>();
     let enabled = system_tray.toggle(&app).await?;
-    
+
     Ok(serde_json::json!({
         "enabled": enabled,
         "message": if enabled { "系统托盘已启用" } else { "系统托盘已禁用" }
@@ -59,7 +59,10 @@ pub async fn is_system_tray_enabled(app: tauri::AppHandle) -> Result<bool, Strin
 }
 
 #[tauri::command]
-pub async fn save_system_tray_state(app: tauri::AppHandle, enabled: bool) -> Result<String, String> {
+pub async fn save_system_tray_state(
+    app: tauri::AppHandle,
+    enabled: bool,
+) -> Result<String, String> {
     let system_tray = app.state::<SystemTrayManager>();
     if enabled {
         system_tray.enable(&app).await?;

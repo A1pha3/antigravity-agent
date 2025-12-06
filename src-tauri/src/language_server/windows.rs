@@ -1,17 +1,19 @@
 use anyhow::{anyhow, Result};
 use read_process_memory::{CopyAddress, Pid, ProcessHandle};
-use std::convert::TryInto;
 use regex::Regex;
+use std::convert::TryInto;
 use std::mem::{size_of, zeroed};
 use windows::Win32::Foundation::{CloseHandle, HANDLE};
 use windows::Win32::System::Memory::{
-    VirtualQueryEx, MEM_COMMIT, MEMORY_BASIC_INFORMATION, PAGE_EXECUTE_READWRITE,
-    PAGE_EXECUTE_WRITECOPY, PAGE_GUARD, PAGE_NOACCESS, PAGE_PROTECTION_FLAGS,
-    PAGE_READWRITE, PAGE_WRITECOPY,
+    VirtualQueryEx, MEMORY_BASIC_INFORMATION, MEM_COMMIT, PAGE_EXECUTE_READWRITE,
+    PAGE_EXECUTE_WRITECOPY, PAGE_GUARD, PAGE_NOACCESS, PAGE_PROTECTION_FLAGS, PAGE_READWRITE,
+    PAGE_WRITECOPY,
 };
 use windows::Win32::System::Threading::{OpenProcess, PROCESS_QUERY_INFORMATION, PROCESS_VM_READ};
 
-use crate::language_server::utils::{search_bytes_for_token, CHUNK_SIZE, SCAN_AHEAD, MAX_REGION_BYTES};
+use crate::language_server::utils::{
+    search_bytes_for_token, CHUNK_SIZE, MAX_REGION_BYTES, SCAN_AHEAD,
+};
 
 fn is_readable(protect: PAGE_PROTECTION_FLAGS) -> bool {
     let p = protect;
@@ -20,10 +22,7 @@ fn is_readable(protect: PAGE_PROTECTION_FLAGS) -> bool {
     }
     matches!(
         p,
-        PAGE_READWRITE
-            | PAGE_WRITECOPY
-            | PAGE_EXECUTE_READWRITE
-            | PAGE_EXECUTE_WRITECOPY
+        PAGE_READWRITE | PAGE_WRITECOPY | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY
     )
 }
 
@@ -33,12 +32,15 @@ pub(super) fn scan_process_for_token(
     patterns: &(Vec<u8>, Vec<u8>),
 ) -> Result<Option<String>> {
     // 供 VirtualQueryEx 使用的句柄
-    let handle: HANDLE = unsafe { OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, false, pid)? };
+    let handle: HANDLE =
+        unsafe { OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, false, pid)? };
     if handle.is_invalid() {
         return Err(anyhow!("OpenProcess 失败"));
     }
     // 供跨平台安全读取的句柄
-    let rpm_handle: ProcessHandle = (pid as Pid).try_into().map_err(|e| anyhow!("打开进程用于读取失败: {e}"))?;
+    let rpm_handle: ProcessHandle = (pid as Pid)
+        .try_into()
+        .map_err(|e| anyhow!("打开进程用于读取失败: {e}"))?;
 
     let mut address = 0usize;
     let mut info: MEMORY_BASIC_INFORMATION = unsafe { zeroed() };
@@ -79,7 +81,9 @@ pub(super) fn scan_process_for_token(
 
                 buffer.truncate(read);
                 if let Some(token) = search_bytes_for_token(&buffer, uuid_re, patterns) {
-                    unsafe { let _ = CloseHandle(handle); };
+                    unsafe {
+                        let _ = CloseHandle(handle);
+                    };
                     return Ok(Some(token));
                 }
 
@@ -93,6 +97,8 @@ pub(super) fn scan_process_for_token(
         }
     }
 
-    unsafe { let _ = CloseHandle(handle); };
+    unsafe {
+        let _ = CloseHandle(handle);
+    };
     Ok(None)
 }

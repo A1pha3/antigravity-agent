@@ -105,5 +105,3 @@ pub async fn load_window_state() -> Result<WindowState, String> {
         Ok(WindowState::default())
     }
 }
-
-

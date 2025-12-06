@@ -1,32 +1,32 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use tracing_appender::{rolling, non_blocking};
-use tracing_appender::non_blocking::WorkerGuard;
-use tracing_subscriber::prelude::*;
+use dirs;
 use std::fs;
 use std::path::PathBuf;
-use dirs;
+use tracing_appender::non_blocking::WorkerGuard;
+use tracing_appender::{non_blocking, rolling};
+use tracing_subscriber::prelude::*;
 
 // Modules
 mod antigravity;
-mod platform;
-mod window;
-mod system_tray;
-mod constants;
-mod config_manager;
 mod app_settings;
-mod utils;
+mod config_manager;
+mod constants;
 mod language_server;
+mod platform;
+mod system_tray;
+mod utils;
+mod window;
 
-mod db_monitor;
 mod commands;
+mod db_monitor;
 mod path_utils;
-mod state;
 mod setup;
+mod state;
 
 // Re-export AppState for compatibility with other modules
-pub use state::{AppState, ProfileInfo, AntigravityAccount};
+pub use state::{AntigravityAccount, AppState, ProfileInfo};
 
 // Use commands
 use crate::commands::*;
@@ -79,14 +79,14 @@ fn init_tracing() -> WorkerGuard {
                 .with_writer(std::io::stdout)
                 .with_target(false)
                 .compact()
-                .with_ansi(true) // 控制台启用颜色
+                .with_ansi(true), // 控制台启用颜色
         )
         .with(
             tracing_subscriber::fmt::layer()
                 .with_writer(non_blocking)
                 .with_target(true)
                 .with_ansi(false) // 文件不使用颜色代码
-                .json() // 文件使用 JSON 格式，便于后续处理
+                .json(), // 文件使用 JSON 格式，便于后续处理
         )
         .init();
 
@@ -105,15 +105,14 @@ fn main() {
     crate::utils::tracing_config::log_system_info();
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init())
         .manage(AppState::default())
-        .setup(|app| {
-            setup::init(app)
-        })
+        .setup(|app| setup::init(app))
         .invoke_handler(tauri::generate_handler![
             backup_profile,
             restore_profile,
@@ -154,7 +153,7 @@ fn main() {
             save_system_tray_state,
             get_system_tray_state,
             toggle_system_tray,
-              is_silent_start_enabled,
+            is_silent_start_enabled,
             save_silent_start_state,
             get_all_settings,
             // 数据库监控命令

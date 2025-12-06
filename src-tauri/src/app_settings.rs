@@ -19,7 +19,7 @@ pub struct AppSettings {
 impl Default for AppSettings {
     fn default() -> Self {
         Self {
-            system_tray_enabled: false, // 默认不启用，避免打扰用户
+            system_tray_enabled: false,  // 默认不启用，避免打扰用户
             silent_start_enabled: false, // 默认不启用静默启动，让用户看到应用界面
         }
     }
@@ -38,10 +38,14 @@ impl AppSettingsManager {
             Ok(manager) => manager.app_settings_file(),
             Err(_) => {
                 // 如果 ConfigManager 初始化失败，尝试使用 Tauri 的配置目录
-                app_handle.path().app_config_dir().unwrap_or(PathBuf::from(".")).join("app_settings.json")
+                app_handle
+                    .path()
+                    .app_config_dir()
+                    .unwrap_or(PathBuf::from("."))
+                    .join("app_settings.json")
             }
         };
-        
+
         // 尝试加载现有设置
         let settings = if config_path.exists() {
             match fs::read_to_string(&config_path) {
@@ -70,18 +74,17 @@ impl AppSettingsManager {
     {
         let mut settings = self.settings.lock().unwrap();
         update_fn(&mut settings);
-        
+
         // 保存到文件
         let json = serde_json::to_string_pretty(&*settings)
             .map_err(|e| format!("序列化设置失败: {}", e))?;
-            
+
         if let Some(parent) = self.config_path.parent() {
             fs::create_dir_all(parent).map_err(|e| format!("创建目录失败: {}", e))?;
         }
-        
-        fs::write(&self.config_path, json)
-            .map_err(|e| format!("写入设置文件失败: {}", e))?;
-            
+
+        fs::write(&self.config_path, json).map_err(|e| format!("写入设置文件失败: {}", e))?;
+
         Ok(())
     }
 }

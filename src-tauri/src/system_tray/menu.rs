@@ -9,8 +9,13 @@ pub async fn build_menu(app_handle: &AppHandle) -> tauri::Result<tauri::menu::Me
 
     // 1. 获取账户列表
     let state = app_handle.state::<crate::AppState>();
-    let recent_accounts = crate::commands::backup_commands::get_recent_accounts(state.clone(), Some(2)).await.unwrap_or_default();
-    let all_accounts = crate::commands::backup_commands::get_recent_accounts(state.clone(), None).await.unwrap_or_default();
+    let recent_accounts =
+        crate::commands::backup_commands::get_recent_accounts(state.clone(), Some(2))
+            .await
+            .unwrap_or_default();
+    let all_accounts = crate::commands::backup_commands::get_recent_accounts(state.clone(), None)
+        .await
+        .unwrap_or_default();
 
     // 2. 添加账户相关菜单
     if !all_accounts.is_empty() {
@@ -40,13 +45,7 @@ pub async fn build_menu(app_handle: &AppHandle) -> tauri::Result<tauri::menu::Me
 
             for account in &all_accounts {
                 let menu_id = format!("switch_account:{}", account);
-                let item = MenuItem::with_id(
-                    app_handle,
-                    &menu_id,
-                    account,
-                    true,
-                    None::<&str>,
-                )?;
+                let item = MenuItem::with_id(app_handle, &menu_id, account, true, None::<&str>)?;
                 submenu_builder = submenu_builder.item(&item);
             }
 

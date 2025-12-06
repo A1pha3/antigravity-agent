@@ -40,14 +40,17 @@ pub fn save_custom_executable_path(path: String) -> Result<(), String> {
     config.custom_executable_path = Some(path);
     write_config(&config_file, &config)?;
 
-  tracing::info!("✅ 已保存自定义 Antigravity 可执行文件路径");
+    tracing::info!("✅ 已保存自定义 Antigravity 可执行文件路径");
     Ok(())
 }
 
 /// 写入配置到文件
-fn write_config(config_file: &std::path::Path, config: &AntigravityPathConfig) -> Result<(), String> {
-    let json = serde_json::to_string_pretty(config)
-        .map_err(|e| format!("序列化配置失败: {}", e))?;
+fn write_config(
+    config_file: &std::path::Path,
+    config: &AntigravityPathConfig,
+) -> Result<(), String> {
+    let json =
+        serde_json::to_string_pretty(config).map_err(|e| format!("序列化配置失败: {}", e))?;
     fs::write(config_file, json).map_err(|e| format!("写入配置文件失败: {}", e))?;
     Ok(())
 }
@@ -60,11 +63,11 @@ fn read_config() -> Result<AntigravityPathConfig, String> {
         return Ok(AntigravityPathConfig::default());
     }
 
-    let content = fs::read_to_string(&config_file)
-        .map_err(|e| format!("读取配置文件失败: {}", e))?;
+    let content =
+        fs::read_to_string(&config_file).map_err(|e| format!("读取配置文件失败: {}", e))?;
 
-    let config: AntigravityPathConfig = serde_json::from_str(&content)
-        .map_err(|e| format!("解析配置文件失败: {}", e))?;
+    let config: AntigravityPathConfig =
+        serde_json::from_str(&content).map_err(|e| format!("解析配置文件失败: {}", e))?;
 
     Ok(config)
 }
@@ -82,7 +85,7 @@ pub fn clear_custom_path() -> Result<(), String> {
 
     if config_file.exists() {
         fs::remove_file(&config_file).map_err(|e| format!("删除配置文件失败: {}", e))?;
-      tracing::info!("✅ 已清除自定义 Antigravity 路径");
+        tracing::info!("✅ 已清除自定义 Antigravity 路径");
     }
 
     Ok(())

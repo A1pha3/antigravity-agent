@@ -1,9 +1,9 @@
 //! 日志相关命令
 //! 提供日志管理功能
 
+use crate::utils::log_sanitizer::LogSanitizer;
 use dirs;
 use std::fs;
-use crate::utils::log_sanitizer::LogSanitizer;
 
 /// 获取日志目录路径
 /// 与 state.rs 中的配置目录保持一致
@@ -99,7 +99,7 @@ pub async fn write_text_file(path: String, content: String) -> Result<String, St
 #[tauri::command]
 pub async fn decrypt_config_data(file_path: String, password: String) -> Result<String, String> {
     crate::log_async_command!("decrypt_config_data", async {
-        use base64::{Engine as _, engine::general_purpose::STANDARD};
+        use base64::{engine::general_purpose::STANDARD, Engine as _};
         use tokio::fs as tokio_fs;
 
         // 读取文件内容
@@ -112,8 +112,8 @@ pub async fn decrypt_config_data(file_path: String, password: String) -> Result<
         }
 
         // 转换为字符串处理
-        let file_string = String::from_utf8(file_content)
-            .map_err(|e| format!("文件编码错误: {}", e))?;
+        let file_string =
+            String::from_utf8(file_content).map_err(|e| format!("文件编码错误: {}", e))?;
         let file_size = file_string.len();
 
         // 检测文件是否为 Base64 编码（加密文件）
@@ -135,8 +135,7 @@ pub async fn decrypt_config_data(file_path: String, password: String) -> Result<
                 decrypted_bytes[i] = byte ^ key_bytes[i % key_bytes.len()];
             }
 
-            String::from_utf8(decrypted_bytes)
-                .map_err(|e| format!("UTF-8解码失败: {}", e))?
+            String::from_utf8(decrypted_bytes).map_err(|e| format!("UTF-8解码失败: {}", e))?
         };
 
         // 验证是否为有效的JSON
@@ -154,7 +153,7 @@ pub async fn decrypt_config_data(file_path: String, password: String) -> Result<
 #[tauri::command]
 pub async fn encrypt_config_data(json_data: String, password: String) -> Result<String, String> {
     crate::log_async_command!("encrypt_config_data", async {
-        use base64::{Engine as _, engine::general_purpose::STANDARD};
+        use base64::{engine::general_purpose::STANDARD, Engine as _};
 
         // 验证是否为有效的JSON
         if serde_json::from_str::<serde_json::Value>(&json_data).is_err() {
@@ -224,7 +223,8 @@ pub async fn write_frontend_log(log_entry: serde_json::Value) -> Result<(), Stri
                 target = "frontend",
                 session_id = session_id,
                 details = sanitized_details,
-                "🌐 {}", sanitized_message
+                "🌐 {}",
+                sanitized_message
             );
         }
         "warn" => {
@@ -232,7 +232,8 @@ pub async fn write_frontend_log(log_entry: serde_json::Value) -> Result<(), Stri
                 target = "frontend",
                 session_id = session_id,
                 details = sanitized_details,
-                "🌐 {}", sanitized_message
+                "🌐 {}",
+                sanitized_message
             );
         }
         _ => {
@@ -240,7 +241,8 @@ pub async fn write_frontend_log(log_entry: serde_json::Value) -> Result<(), Stri
                 target = "frontend",
                 session_id = session_id,
                 details = sanitized_details,
-                "🌐 {}", sanitized_message
+                "🌐 {}",
+                sanitized_message
             );
         }
     }
