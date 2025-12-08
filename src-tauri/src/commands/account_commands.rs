@@ -553,4 +553,63 @@ pub async fn switch_to_antigravity_account(account_name: String) -> Result<Strin
     })
 }
 
+/// 直接从 Antigravity 数据库读取用户状态（不需要 CSRF token）
+/// 返回 userStatusProtoBinaryBase64 字段，用于解析配额信息
+#[tauri::command]
+#[instrument]
+pub async fn get_user_status_from_db() -> Result<Value, String> {
+    tracing::info!("📊 从数据库读取用户状态");
+    
+    let start_time = std::time::Instant::now();
+    
+    let result = async {
+        // 获取 Antigravity 数据库路径
+        let db_path = crate::platform::get_antigravity_db_path()
+            .ok_or_else(|| "未找到 Antigravity 数据库".to_string())?;
+        
+        if !db_path.exists() {
+            return Err(format!("Antigravity 数据库不存在: {}", db_path.display()));
+        }
+        
+        // 连接数据库
+        let conn = Connection::open(&db_path)
+            .map_err(|e| format!("连接数据库失败: {}", e))?;
+        
+        // 查询 antigravityAuthStatus
+        let auth_json: String = conn
+            .query_row(
+                "SELECT value FROM ItemTable WHERE key = 'antigravityAuthStatus'",
+                [],
+                |row| row.get(0),
+            )
+            .map_err(|e| format!("查询认证信息失败: {}", e))?;
+        
+        // 解析 JSON
+        let auth_data: Value = from_str(&auth_json)
+            .map_err(|e| format!("解析认证信息失败: {}", e))?;
+        
+        Ok(auth_data)
+    }.await;
+    
+    let duration = start_time.elapsed();
+    
+    match result {
+        Ok(data) => {
+            tracing::info!(
+                duration_ms = duration.as_millis(),
+                "从数据库读取用户状态成功"
+            );
+            Ok(data)
+        }
+        Err(e) => {
+            tracing::error!(
+                error = %e,
+                duration_ms = duration.as_millis(),
+                "从数据库读取用户状态失败"
+            );
+            Err(e)
+        }
+    }
+}
+
 // 命令函数将在后续步骤中移动到这里

@@ -129,6 +129,7 @@ fn main() {
             restore_antigravity_account,
             switch_to_antigravity_account,
             clear_all_antigravity_data,
+            get_user_status_from_db,
             // 进程管理命令
             kill_antigravity,
             is_antigravity_running,
