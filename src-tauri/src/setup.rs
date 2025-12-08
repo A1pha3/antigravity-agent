@@ -1,6 +1,6 @@
-use tauri::{App, Manager};
+use crate::{app_settings, db_monitor, system_tray, window};
 use std::sync::Arc;
-use crate::{app_settings, system_tray, db_monitor, window};
+use tauri::{App, Manager};
 
 pub fn init(app: &mut App) -> std::result::Result<(), Box<dyn std::error::Error>> {
     tracing::info!(target: "app::setup", "开始应用程序设置");
@@ -19,16 +19,8 @@ pub fn init(app: &mut App) -> std::result::Result<(), Box<dyn std::error::Error>
     {
         if let Some(window) = app.get_webview_window("main") {
             // Tauri 2.x 中禁用上下文菜单需要通过eval执行JavaScript
-            let _ = window
-                .eval("window.addEventListener('contextmenu', e => e.preventDefault());");
+            let _ = window.eval("window.addEventListener('contextmenu', e => e.preventDefault());");
         }
-    }
-
-    // 初始化系统托盘管理器
-    let system_tray = app.state::<system_tray::SystemTrayManager>();
-    match system_tray.initialize(app.handle()) {
-        Ok(_) => tracing::info!(target: "app::setup::tray", "系统托盘管理器初始化成功"),
-        Err(e) => tracing::error!(target: "app::setup::tray", error = %e, "系统托盘管理器初始化失败"),
     }
 
     // 初始化数据库监控器
@@ -51,12 +43,43 @@ pub fn init(app: &mut App) -> std::result::Result<(), Box<dyn std::error::Error>
     let settings_manager = app.state::<app_settings::AppSettingsManager>();
     let settings = settings_manager.get_settings();
 
-    if settings.silent_start_enabled {
-        tracing::info!(target: "app::setup::silent_start", "静默启动模式已启用，准备隐藏主窗口");
+    // 根据设置决定是否创建系统托盘
+    if settings.system_tray_enabled {
+        tracing::info!(target: "app::setup::tray", "系统托盘已启用，正在创建托盘");
+        let system_tray = app.state::<system_tray::SystemTrayManager>();
+        if let Err(e) = system_tray.enable(app.handle()) {
+            tracing::error!(target: "app::setup::tray", error = %e, "启动时创建系统托盘失败");
+        } else {
+            tracing::info!(target: "app::setup::tray", "系统托盘已创建");
+        }
+    } else {
+        tracing::info!(target: "app::setup::tray", "系统托盘已禁用，跳过创建");
+    }
+
+    // 双重检查：如果静默启动但未启用系统托盘，这是不允许的
+    if settings.silent_start_enabled && !settings.system_tray_enabled {
+        tracing::warn!(
+            target: "app::setup::silent_start",
+            "检测到危险配置：静默启动已启用但系统托盘未启用。自动禁用静默启动以确保安全。"
+        );
+
+        // 自动修正这个配置
+        if let Err(e) = settings_manager.update_settings(|s| {
+            s.silent_start_enabled = false;
+        }) {
+            tracing::error!(
+                target: "app::setup::silent_start",
+                error = %e,
+                "自动修正设置失败"
+            );
+        }
+
+        tracing::info!(target: "app::setup::silent_start", "已禁用静默启动，正常显示窗口");
+    } else if settings.silent_start_enabled && settings.system_tray_enabled {
+        tracing::info!(target: "app::setup::silent_start", "静默启动模式已启用（系统托盘已启用），准备隐藏主窗口");
 
         // 延迟执行静默启动，确保在窗口状态恢复完成后隐藏窗口
         let app_handle_for_silent = app.handle().clone();
-        let system_tray_enabled = settings.system_tray_enabled;
 
         tauri::async_runtime::spawn(async move {
             // 等待1.5秒，确保窗口状态恢复和其他初始化都完成
@@ -69,13 +92,7 @@ pub fn init(app: &mut App) -> std::result::Result<(), Box<dyn std::error::Error>
                 match main_window.hide() {
                     Ok(()) => {
                         tracing::info!(target: "app::setup::silent_start", "静默启动：窗口已隐藏");
-
-                        // 如果启用了系统托盘，提示用户可通过托盘访问
-                        if system_tray_enabled {
-                            tracing::info!(target: "app::setup::silent_start", "静默启动 + 系统托盘：可通过系统托盘图标访问应用");
-                        } else {
-                            tracing::warn!(target: "app::setup::silent_start", "静默启动但系统托盘未启用：用户需要通过其他方式访问应用");
-                        }
+                        tracing::info!(target: "app::setup::silent_start", "可通过系统托盘图标访问应用");
                     }
                     Err(e) => {
                         tracing::error!(target: "app::setup::silent_start", error = %e, "静默启动隐藏窗口失败");

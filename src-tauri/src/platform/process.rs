@@ -63,7 +63,11 @@ pub fn is_antigravity_running() -> bool {
         let process_cmd = process.cmd().join(" ");
 
         if matches_antigravity_process(process_name, &process_cmd, &process_patterns) {
-            tracing::debug!("✅ 发现运行中的 Antigravity 进程: {} (PID: {})", process_name, pid);
+            tracing::debug!(
+                "✅ 发现运行中的 Antigravity 进程: {} (PID: {})",
+                process_name,
+                pid
+            );
             return true;
         }
     }
@@ -78,10 +82,13 @@ fn get_antigravity_process_patterns() -> Vec<ProcessPattern> {
         "macos" => {
             vec![
                 // 主进程：Electron（Antigravity的包装进程），必须通过路径验证
-                ProcessPattern::CmdContains("/Applications/Antigravity.app/Contents/MacOS/Electron"),
-
+                ProcessPattern::CmdContains(
+                    "/Applications/Antigravity.app/Contents/MacOS/Electron",
+                ),
                 // Helper 进程：Antigravity Helper系列（GPU、Renderer、Plugin等）
-                ProcessPattern::CmdContains("Antigravity.app/Contents/Frameworks/Antigravity Helper"),
+                ProcessPattern::CmdContains(
+                    "Antigravity.app/Contents/Frameworks/Antigravity Helper",
+                ),
             ]
         }
         "windows" => {
@@ -94,22 +101,21 @@ fn get_antigravity_process_patterns() -> Vec<ProcessPattern> {
         "linux" => {
             vec![
                 ProcessPattern::ExactName("antigravity"),
-                ProcessPattern::ExactName("Antigravity"),
-                ProcessPattern::Contains("Antigravity"),
-                ProcessPattern::CmdContains("antigravity"),
                 ProcessPattern::CmdContains("Antigravity.AppImage"),
             ]
         }
         _ => {
-            vec![
-                ProcessPattern::ExactName("Antigravity"),
-            ]
+            vec![ProcessPattern::ExactName("Antigravity")]
         }
     }
 }
 
 /// 检查进程是否匹配 Antigravity 模式
-fn matches_antigravity_process(process_name: &str, process_cmd: &str, patterns: &[ProcessPattern]) -> bool {
+fn matches_antigravity_process(
+    process_name: &str,
+    process_cmd: &str,
+    patterns: &[ProcessPattern],
+) -> bool {
     let mut matched = false;
     for pattern in patterns {
         match pattern {
@@ -120,24 +126,10 @@ fn matches_antigravity_process(process_name: &str, process_cmd: &str, patterns: 
                     matched = true;
                 }
             }
-            ProcessPattern::Contains(text) => {
-                if process_name.contains(text) || process_cmd.contains(text) {
-                    tracing::debug!("✅ 包含匹配: {}", text);
-                    tracing::info!("🎯 匹配模式: ProcessPattern::Contains(\"{}\")", text);
-                    matched = true;
-                }
-            }
             ProcessPattern::CmdContains(text) => {
                 if process_cmd.contains(text) {
                     tracing::debug!("✅ 命令行包含匹配: {}", text);
                     tracing::info!("🎯 匹配模式: ProcessPattern::CmdContains(\"{}\")", text);
-                    matched = true;
-                }
-            }
-            ProcessPattern::CmdEndsWith(suffix) => {
-                if process_cmd.ends_with(suffix) {
-                    tracing::debug!("✅ 命令行后缀匹配: {}", suffix);
-                    tracing::info!("🎯 匹配模式: ProcessPattern::CmdEndsWith(\"{}\")", suffix);
                     matched = true;
                 }
             }
@@ -149,10 +141,8 @@ fn matches_antigravity_process(process_name: &str, process_cmd: &str, patterns: 
 /// 进程匹配模式
 #[derive(Debug, Clone)]
 pub enum ProcessPattern {
-    ExactName(&'static str),    // 精确匹配进程名
-    Contains(&'static str),      // 包含指定文本
-    CmdContains(&'static str),   // 命令行包含指定文本
-    CmdEndsWith(&'static str),   // 命令行以指定文本结尾
+    ExactName(&'static str),   // 精确匹配进程名
+    CmdContains(&'static str), // 命令行包含指定文本
 }
 
 /// 获取 Antigravity 进程匹配模式（用于调试）
@@ -164,7 +154,7 @@ pub fn get_antigravity_process_patterns_for_debug() -> Vec<ProcessPattern> {
 pub fn matches_antigravity_process_for_debug(
     process_name: &str,
     process_cmd: &str,
-    pattern: &ProcessPattern
+    pattern: &ProcessPattern,
 ) -> bool {
     matches_antigravity_process(process_name, process_cmd, &[pattern.clone()])
 }

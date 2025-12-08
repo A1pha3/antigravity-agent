@@ -22,27 +22,25 @@ impl AppPaths {
             _ => Self::fallback_antigravity_data_dir(),
         };
 
-      match &result {
-        Some(path) => {
-          let sanitized_path = sanitize_user_path(path);
-          tracing::info!("🔍 检测 Antigravity 数据目录: {}", sanitized_path);
+        match &result {
+            Some(path) => {
+                let sanitized_path = sanitize_user_path(path);
+                tracing::info!("🔍 检测 Antigravity 数据目录: {}", sanitized_path);
+            }
+            None => tracing::info!("🔍 检测 Antigravity 数据目录: 未找到"),
         }
-        None => tracing::info!("🔍 检测 Antigravity 数据目录: 未找到"),
-      }
 
         result
     }
 
     /// Windows: %APPDATA%\Antigravity\User\globalStorage\
     fn windows_antigravity_data_dir() -> Option<PathBuf> {
-        config_dir()
-            .map(|path| path.join("Antigravity").join("User").join("globalStorage"))
+        config_dir().map(|path| path.join("Antigravity").join("User").join("globalStorage"))
     }
 
     /// macOS: ~/Library/Application Support/Antigravity/User/globalStorage/
     fn macos_antigravity_data_dir() -> Option<PathBuf> {
-        data_dir()
-            .map(|path| path.join("Antigravity").join("User").join("globalStorage"))
+        data_dir().map(|path| path.join("Antigravity").join("User").join("globalStorage"))
     }
 
     /// Linux: ~/.config/Antigravity/User/globalStorage/ (优先) 或 ~/.local/share/Antigravity/User/globalStorage/ (备用)
@@ -52,15 +50,13 @@ impl AppPaths {
             .map(|path| path.join("Antigravity").join("User").join("globalStorage"))
             .or_else(|| {
                 // 备用：~/.local/share
-                data_dir()
-                    .map(|path| path.join("Antigravity").join("User").join("globalStorage"))
+                data_dir().map(|path| path.join("Antigravity").join("User").join("globalStorage"))
             })
     }
 
     /// 其他系统的备用方案
     fn fallback_antigravity_data_dir() -> Option<PathBuf> {
-        data_dir()
-            .map(|path| path.join("Antigravity").join("User").join("globalStorage"))
+        data_dir().map(|path| path.join("Antigravity").join("User").join("globalStorage"))
     }
 
     /// 获取 Antigravity 可执行文件路径
@@ -84,16 +80,34 @@ impl AppPaths {
 
         // 用户程序目录: %LOCALAPPDATA%\Programs\
         if let Some(local_data) = data_local_dir() {
-            paths.push(local_data.join("Programs").join("Antigravity").join("Antigravity.exe"));
+            paths.push(
+                local_data
+                    .join("Programs")
+                    .join("Antigravity")
+                    .join("Antigravity.exe"),
+            );
         }
 
         // 用户数据目录的其他位置
         if let Some(home) = home_dir() {
             // %APPDATA%\Local\Programs\Antigravity\
-            paths.push(home.join("AppData").join("Local").join("Programs").join("Antigravity").join("Antigravity.exe"));
+            paths.push(
+                home.join("AppData")
+                    .join("Local")
+                    .join("Programs")
+                    .join("Antigravity")
+                    .join("Antigravity.exe"),
+            );
 
             // %APPDATA%\Roaming\Local\Programs\Antigravity\ (虽然不常见，但有些应用会这样安装)
-            paths.push(home.join("AppData").join("Roaming").join("Local").join("Programs").join("Antigravity").join("Antigravity.exe"));
+            paths.push(
+                home.join("AppData")
+                    .join("Roaming")
+                    .join("Local")
+                    .join("Programs")
+                    .join("Antigravity")
+                    .join("Antigravity.exe"),
+            );
         }
 
         // 系统程序目录
@@ -102,7 +116,11 @@ impl AppPaths {
         }
 
         if let Some(program_files_x86) = Self::get_program_files_x86_dir() {
-            paths.push(program_files_x86.join("Antigravity").join("Antigravity.exe"));
+            paths.push(
+                program_files_x86
+                    .join("Antigravity")
+                    .join("Antigravity.exe"),
+            );
         }
 
         paths
@@ -116,7 +134,7 @@ impl AppPaths {
             "Antigravity.app",
             "Antigravity-electron.app",
             "Antigravity-alpha.app",
-            "Antigravity-beta.app"
+            "Antigravity-beta.app",
         ];
 
         // 系统应用程序目录
@@ -163,7 +181,14 @@ impl AppPaths {
         // Flatpak
         paths.push(PathBuf::from("/var/lib/flatpak/exports/bin/antigravity"));
         if let Some(home) = home_dir() {
-            paths.push(home.join(".local").join("share").join("flatpak").join("exports").join("bin").join("antigravity"));
+            paths.push(
+                home.join(".local")
+                    .join("share")
+                    .join("flatpak")
+                    .join("exports")
+                    .join("bin")
+                    .join("antigravity"),
+            );
         }
 
         paths
@@ -173,8 +198,7 @@ impl AppPaths {
     ///
     /// 统一的配置目录获取，避免硬编码
     pub fn config_dir() -> Option<PathBuf> {
-        config_dir()
-            .map(|path| path.join(".antigravity-agent"))
+        config_dir().map(|path| path.join(".antigravity-agent"))
     }
 
     /// 获取备份目录
@@ -185,16 +209,12 @@ impl AppPaths {
     // Windows 特定的辅助方法
     #[cfg(target_os = "windows")]
     fn get_program_files_dir() -> Option<PathBuf> {
-        std::env::var("ProgramFiles")
-            .ok()
-            .map(PathBuf::from)
+        std::env::var("ProgramFiles").ok().map(PathBuf::from)
     }
 
     #[cfg(target_os = "windows")]
     fn get_program_files_x86_dir() -> Option<PathBuf> {
-        std::env::var("ProgramFiles(x86)")
-            .ok()
-            .map(PathBuf::from)
+        std::env::var("ProgramFiles(x86)").ok().map(PathBuf::from)
     }
 
     // macOS 特定的辅助方法
@@ -231,7 +251,11 @@ fn sanitize_user_path(path: &Path) -> String {
             let user_path_start = start + 7; // 跳过 "\Users\"
             if let Some(end) = path_str[user_path_start..].find('\\') {
                 let end = user_path_start + end;
-                return format!("{}\\Users\\****\\{}", &path_str[..start], &path_str[end + 1..]);
+                return format!(
+                    "{}\\Users\\****\\{}",
+                    &path_str[..start],
+                    &path_str[end + 1..]
+                );
             }
         }
     } else if std::env::consts::OS == "macos" {
@@ -257,4 +281,3 @@ fn sanitize_user_path(path: &Path) -> String {
     // 如果没有匹配到任何模式，返回原路径
     path_str.to_string()
 }
-

@@ -5,7 +5,6 @@
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 
-
 /// 启动 Antigravity 应用程序（主入口函数）
 ///
 /// # 返回值
@@ -33,7 +32,7 @@ pub fn start_antigravity() -> Result<String, String> {
             tracing::warn!("⚠️ 自定义可执行文件路径无效: {}", custom_exec);
         }
     }
-    
+
     // 回退到自动检测
     match std::env::consts::OS {
         "windows" => start_antigravity_windows(),
@@ -124,41 +123,34 @@ fn start_antigravity_macos() -> Result<String, String> {
 
 /// 在 Linux 平台启动 Antigravity
 fn start_antigravity_linux() -> Result<String, String> {
-    let mut errors = Vec::new();
-    let antigravity_paths = crate::path_utils::AppPaths::antigravity_executable_paths();
+    let antigravity_path = std::path::PathBuf::from("/usr/share/antigravity/antigravity");
 
-    // 尝试所有推测的路径
-    for path in &antigravity_paths {
-        if path.exists() {
-            match try_start_from_path(path) {
-                Ok(_) => {
-                    return Ok("Antigravity 已启动".to_string());
-                }
-                Err(e) => {
-                    errors.push(format!("{}: {}", path.display(), e));
-                }
-            }
-        } else {
-            errors.push(format!("{}: 文件不存在", path.display()));
-        }
+    if !antigravity_path.exists() {
+        return Err("Antigravity 未安装。请先安装 Antigravity 应用。".to_string());
     }
 
-    // 尝试系统 PATH 中的命令
-    let commands = vec!["antigravity", "Antigravity"];
-    match try_start_from_commands(commands) {
-        Ok(msg) => Ok(msg),
-        Err(e) => {
-            errors.push(e);
-            Err(format!(
-                "无法启动Antigravity。请手动启动Antigravity应用。\n尝试的方法：\n{}",
-                errors.join("\n")
-            ))
-        }
+    let mut cmd = std::process::Command::new(&antigravity_path);
+
+    // 设置桌面环境变量
+    cmd.env("XDG_SESSION_TYPE", "wayland");
+
+    // 如果当前有 DISPLAY，使用它；否则尝试常见值
+    if let Ok(display) = std::env::var("DISPLAY") {
+        cmd.env("DISPLAY", display);
+    } else {
+        cmd.env("DISPLAY", ":0");
+    }
+
+    // 设置其他必要的环境变量
+    if let Ok(xauthority) = std::env::var("XAUTHORITY") {
+        cmd.env("XAUTHORITY", xauthority);
+    }
+
+    match cmd.spawn() {
+        Ok(_) => Ok("Antigravity 已启动".to_string()),
+        Err(e) => Err(format!("启动 Antigravity 失败: {}", e)),
     }
 }
-
-
-
 
 /// 尝试从指定路径启动应用程序
 fn try_start_from_path(path: &PathBuf) -> Result<String, String> {
@@ -174,7 +166,7 @@ fn try_start_from_path(path: &PathBuf) -> Result<String, String> {
 
         // 方法1: 尝试不带 -n 参数的 open 命令（更兼容）
         match Command::new("open")
-            .arg("-g")  // 在后台启动应用
+            .arg("-g") // 在后台启动应用
             .arg(&app_bundle_path)
             .stdout(std::process::Stdio::null())
             .stderr(std::process::Stdio::null())
@@ -270,7 +262,6 @@ fn try_start_from_commands(commands: Vec<&str>) -> Result<String, String> {
 
     Err(format!("所有命令尝试失败: {}", errors.join(", ")))
 }
-
 
 /// 检测 Antigravity 可执行文件路径（不启动，只检测）
 pub fn detect_antigravity_executable() -> Option<PathBuf> {

@@ -173,7 +173,7 @@ pub fn init_window_event_handler(app: &tauri::App) -> Result<(), Box<dyn std::er
             }
             // 注意：Tauri 2.x 中没有 Maximized/Unmaximized 事件
             // 最大化/还原状态会在 Resized 事件中捕获和处理
-                    // 窗口关闭时处理系统托盘逻辑
+            // 窗口关闭时处理系统托盘逻辑
             tauri::WindowEvent::CloseRequested { api, .. } => {
                 println!("🚪 收到窗口关闭请求事件");
 
@@ -190,7 +190,8 @@ pub fn init_window_event_handler(app: &tauri::App) -> Result<(), Box<dyn std::er
                     // 在异步运行时中执行最小化操作
                     let app_handle = window_for_events.app_handle().clone();
                     tauri::async_runtime::spawn(async move {
-                        let system_tray = app_handle.state::<crate::system_tray::SystemTrayManager>();
+                        let system_tray =
+                            app_handle.state::<crate::system_tray::SystemTrayManager>();
                         if let Err(e) = system_tray.minimize_to_tray(&app_handle) {
                             eprintln!("最小化到托盘失败: {}", e);
                         }

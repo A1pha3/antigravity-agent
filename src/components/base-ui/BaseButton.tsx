@@ -1,6 +1,6 @@
 import React from 'react';
-import { cn } from '@/utils/utils.ts';
-import { Loader2 } from 'lucide-react';
+import {cn} from '@/utils/utils.ts';
+import {Loader2} from 'lucide-react';
 
 export interface BaseButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
@@ -54,7 +54,7 @@ const BaseButton = React.forwardRef<HTMLButtonElement, BaseButtonProps>(
       <button
         className={cn(
           // 基础样式
-          'inline-flex items-center justify-center gap-2',
+          'inline-flex items-center justify-center gap-2 cursor-pointer',
           'rounded-lg font-medium whitespace-nowrap',
           'transition-all duration-200',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2',

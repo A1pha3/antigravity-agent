@@ -19,9 +19,29 @@ pub struct AppSettings {
 impl Default for AppSettings {
     fn default() -> Self {
         Self {
-            system_tray_enabled: false, // 默认不启用，避免打扰用户
+            system_tray_enabled: false,  // 默认不启用，避免打扰用户
             silent_start_enabled: false, // 默认不启用静默启动，让用户看到应用界面
         }
+    }
+}
+
+impl AppSettings {
+    /// 验证设置的有效性，确保不会出现危险的配置组合
+    pub fn validate(&mut self) -> bool {
+        let mut changed = false;
+
+        // 如果启用了静默启动但未启用系统托盘，这是危险的配置
+        // 自动禁用静默启动以确保安全
+        if self.silent_start_enabled && !self.system_tray_enabled {
+            tracing::warn!(
+                target: "app_settings::validate",
+                "检测到危险的配置组合：静默启动已启用但系统托盘未启用。自动禁用静默启动以确保安全。"
+            );
+            self.silent_start_enabled = false;
+            changed = true;
+        }
+
+        changed
     }
 }
 
@@ -38,12 +58,16 @@ impl AppSettingsManager {
             Ok(manager) => manager.app_settings_file(),
             Err(_) => {
                 // 如果 ConfigManager 初始化失败，尝试使用 Tauri 的配置目录
-                app_handle.path().app_config_dir().unwrap_or(PathBuf::from(".")).join("app_settings.json")
+                app_handle
+                    .path()
+                    .app_config_dir()
+                    .unwrap_or(PathBuf::from("."))
+                    .join("app_settings.json")
             }
         };
-        
+
         // 尝试加载现有设置
-        let settings = if config_path.exists() {
+        let mut settings = if config_path.exists() {
             match fs::read_to_string(&config_path) {
                 Ok(content) => serde_json::from_str(&content).unwrap_or_default(),
                 Err(_) => AppSettings::default(),
@@ -51,6 +75,14 @@ impl AppSettingsManager {
         } else {
             AppSettings::default()
         };
+
+        // 验证并修正已存在的设置
+        if settings.validate() {
+            tracing::warn!(
+                target: "app_settings::init",
+                "加载的设置包含危险配置，已自动修正"
+            );
+        }
 
         Self {
             settings: Mutex::new(settings),
@@ -69,19 +101,35 @@ impl AppSettingsManager {
         F: FnOnce(&mut AppSettings),
     {
         let mut settings = self.settings.lock().unwrap();
+
+        // 记录更新前的状态用于日志
+        let old_silent_start = settings.silent_start_enabled;
+        let old_system_tray = settings.system_tray_enabled;
+
         update_fn(&mut settings);
-        
+
+        // 验证设置的有效性，如果返回 true 表示有修改
+        if settings.validate() {
+            tracing::info!(
+                target: "app_settings::update",
+                old_silent_start = old_silent_start,
+                old_system_tray = old_system_tray,
+                new_silent_start = settings.silent_start_enabled,
+                new_system_tray = settings.system_tray_enabled,
+                "设置验证后已自动修正"
+            );
+        }
+
         // 保存到文件
         let json = serde_json::to_string_pretty(&*settings)
             .map_err(|e| format!("序列化设置失败: {}", e))?;
-            
+
         if let Some(parent) = self.config_path.parent() {
             fs::create_dir_all(parent).map_err(|e| format!("创建目录失败: {}", e))?;
         }
-        
-        fs::write(&self.config_path, json)
-            .map_err(|e| format!("写入设置文件失败: {}", e))?;
-            
+
+        fs::write(&self.config_path, json).map_err(|e| format!("写入设置文件失败: {}", e))?;
+
         Ok(())
     }
 }

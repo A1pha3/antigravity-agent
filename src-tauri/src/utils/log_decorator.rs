@@ -84,4 +84,3 @@ macro_rules! log_user_command {
         }
     }};
 }
-

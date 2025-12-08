@@ -1,9 +1,9 @@
 //! 日志相关命令
 //! 提供日志管理功能
 
+use crate::utils::log_sanitizer::LogSanitizer;
 use dirs;
 use std::fs;
-use crate::utils::log_sanitizer::LogSanitizer;
 
 /// 获取日志目录路径
 /// 与 state.rs 中的配置目录保持一致
@@ -95,13 +95,12 @@ pub async fn write_text_file(path: String, content: String) -> Result<String, St
 }
 
 /// 解密配置数据 - 接收文件路径
-/// 使用 AES-256-GCM 解密，支持向后兼容旧的 XOR 加密格式
+/// 直接读取文件并进行解密，避免前端传输大文件
 #[tauri::command]
 pub async fn decrypt_config_data(file_path: String, password: String) -> Result<String, String> {
     crate::log_async_command!("decrypt_config_data", async {
-        use base64::{Engine as _, engine::general_purpose::STANDARD};
+        use base64::{engine::general_purpose::STANDARD, Engine as _};
         use tokio::fs as tokio_fs;
-        use crate::utils::crypto::{decrypt_with_password, is_encrypted_with_salt};
 
         // 读取文件内容
         let file_content = tokio_fs::read(&file_path)
@@ -112,75 +111,68 @@ pub async fn decrypt_config_data(file_path: String, password: String) -> Result<
             return Err("文件内容为空".to_string());
         }
 
-        let file_size = file_content.len();
+        // 转换为字符串处理
+        let file_string =
+            String::from_utf8(file_content).map_err(|e| format!("文件编码错误: {}", e))?;
+        let file_size = file_string.len();
 
-        // 检测加密格式
-        let decrypted_content = if is_encrypted_with_salt(&file_content) {
-            // 新格式：AES-256-GCM 加密
-            tracing::info!("🔐 检测到 AES-256-GCM 加密格式");
-            let decrypted = decrypt_with_password(&file_content, &password)
-                .map_err(|e| format!("解密失败: {}（请检查密码是否正确）", e))?;
-            String::from_utf8(decrypted)
-                .map_err(|e| format!("UTF-8解码失败: {}", e))?
+        // 检测文件是否为 Base64 编码（加密文件）
+        let encrypted_content = if file_string.trim_start().starts_with('{') {
+            // 如果是 JSON 格式，直接使用（未加密文件）
+            file_string
         } else {
-            // 尝试旧格式或明文
-            let file_string = String::from_utf8(file_content.clone())
-                .map_err(|e| format!("文件编码错误: {}", e))?;
+            // 如果是 Base64 格式，进行解码
+            let encrypted = STANDARD
+                .decode(file_string.trim())
+                .map_err(|e| format!("Base64解码失败: {}", e))?;
 
-            if file_string.trim_start().starts_with('{') {
-                // 明文 JSON 格式
-                tracing::warn!("⚠️ 检测到明文配置文件，建议使用加密导出");
-                file_string
-            } else {
-                // 旧格式：XOR 加密（向后兼容）
-                tracing::warn!("⚠️ 检测到旧版 XOR 加密格式，建议重新导出以使用更安全的加密");
-                let encrypted = STANDARD
-                    .decode(file_string.trim())
-                    .map_err(|e| format!("Base64解码失败: {}", e))?;
+            let encrypted_bytes = encrypted;
+            let key_bytes = password.as_bytes();
+            let mut decrypted_bytes = vec![0u8; encrypted_bytes.len()];
 
-                let key_bytes = password.as_bytes();
-                let mut decrypted_bytes = vec![0u8; encrypted.len()];
-
-                for (i, &byte) in encrypted.iter().enumerate() {
-                    decrypted_bytes[i] = byte ^ key_bytes[i % key_bytes.len()];
-                }
-
-                String::from_utf8(decrypted_bytes)
-                    .map_err(|e| format!("UTF-8解码失败: {}", e))?
+            // XOR 解密
+            for (i, &byte) in encrypted_bytes.iter().enumerate() {
+                decrypted_bytes[i] = byte ^ key_bytes[i % key_bytes.len()];
             }
+
+            String::from_utf8(decrypted_bytes).map_err(|e| format!("UTF-8解码失败: {}", e))?
         };
 
         // 验证是否为有效的JSON
-        if serde_json::from_str::<serde_json::Value>(&decrypted_content).is_err() {
+        if serde_json::from_str::<serde_json::Value>(&encrypted_content).is_err() {
             return Err("解密后的数据不是有效的JSON格式，请检查密码是否正确".to_string());
         }
 
         tracing::info!("🔓 配置文件解密成功，文件大小: {} bytes", file_size);
-        Ok(decrypted_content)
+        Ok(encrypted_content)
     })
 }
 
 /// 加密配置数据
-/// 使用 AES-256-GCM 加密（Argon2 密钥派生），返回二进制数据的 Base64 编码
+/// 接收 JSON 字符串，使用密码进行 XOR 加密，返回 Base64 编码的字符串
 #[tauri::command]
 pub async fn encrypt_config_data(json_data: String, password: String) -> Result<String, String> {
     crate::log_async_command!("encrypt_config_data", async {
-        use base64::{Engine as _, engine::general_purpose::STANDARD};
-        use crate::utils::crypto::encrypt_with_password;
+        use base64::{engine::general_purpose::STANDARD, Engine as _};
 
         // 验证是否为有效的JSON
         if serde_json::from_str::<serde_json::Value>(&json_data).is_err() {
             return Err("输入的数据不是有效的JSON格式".to_string());
         }
 
-        // 使用 AES-256-GCM 加密
-        let encrypted = encrypt_with_password(json_data.as_bytes(), &password)
-            .map_err(|e| format!("加密失败: {}", e))?;
+        // 使用 XOR 加密
+        let data_bytes = json_data.as_bytes();
+        let key_bytes = password.as_bytes();
+        let mut encrypted_bytes = vec![0u8; data_bytes.len()];
 
-        // Base64 编码（便于存储和传输）
-        let encrypted_base64 = STANDARD.encode(&encrypted);
+        for (i, &byte) in data_bytes.iter().enumerate() {
+            encrypted_bytes[i] = byte ^ key_bytes[i % key_bytes.len()];
+        }
 
-        tracing::info!("🔐 配置文件加密成功（AES-256-GCM），数据大小: {} bytes", json_data.len());
+        // Base64 编码
+        let encrypted_base64 = STANDARD.encode(&encrypted_bytes);
+
+        tracing::info!("🔐 配置文件加密成功，数据大小: {} bytes", data_bytes.len());
         Ok(encrypted_base64)
     })
 }
@@ -231,7 +223,8 @@ pub async fn write_frontend_log(log_entry: serde_json::Value) -> Result<(), Stri
                 target = "frontend",
                 session_id = session_id,
                 details = sanitized_details,
-                "🌐 {}", sanitized_message
+                "🌐 {}",
+                sanitized_message
             );
         }
         "warn" => {
@@ -239,7 +232,8 @@ pub async fn write_frontend_log(log_entry: serde_json::Value) -> Result<(), Stri
                 target = "frontend",
                 session_id = session_id,
                 details = sanitized_details,
-                "🌐 {}", sanitized_message
+                "🌐 {}",
+                sanitized_message
             );
         }
         _ => {
@@ -247,7 +241,8 @@ pub async fn write_frontend_log(log_entry: serde_json::Value) -> Result<(), Stri
                 target = "frontend",
                 session_id = session_id,
                 details = sanitized_details,
-                "🌐 {}", sanitized_message
+                "🌐 {}",
+                sanitized_message
             );
         }
     }

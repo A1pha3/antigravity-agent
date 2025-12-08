@@ -1,7 +1,4 @@
 ﻿import {create} from "zustand";
-import {LanguageServerResponse} from "@/commands/types/language-server-response.types.ts";
-import type {AntigravityAccount} from "@/commands/types/account.types.ts";
-import {LanguageServerCommands} from "@/commands/LanguageServerCommands.ts";
 
 type State = {
   loading: boolean

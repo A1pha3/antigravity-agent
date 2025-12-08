@@ -24,7 +24,7 @@ pub async fn is_antigravity_running() -> bool {
 pub async fn list_antigravity_processes() -> Result<Vec<serde_json::Value>, String> {
     use serde_json::json;
 
-  tracing::info!("🔍 搜索所有 Antigravity 相关进程");
+    tracing::info!("🔍 搜索所有 Antigravity 相关进程");
 
     let mut system = sysinfo::System::new_all();
     system.refresh_all();
@@ -38,7 +38,9 @@ pub async fn list_antigravity_processes() -> Result<Vec<serde_json::Value>, Stri
 
         for (i, pattern) in process_patterns.iter().enumerate() {
             if crate::platform::matches_antigravity_process_for_debug(
-                process_name, &process_cmd, pattern
+                process_name,
+                &process_cmd,
+                pattern,
             ) {
                 found_processes.push(json!({
                     "pid": pid.to_string(),
@@ -52,7 +54,7 @@ pub async fn list_antigravity_processes() -> Result<Vec<serde_json::Value>, Stri
         }
     }
 
-  tracing::info!("📊 找到 {} 个 Antigravity 相关进程", found_processes.len());
+    tracing::info!("📊 找到 {} 个 Antigravity 相关进程", found_processes.len());
     Ok(found_processes)
 }
 
@@ -89,7 +91,6 @@ pub async fn backup_and_restart_antigravity() -> Result<String, String> {
     // 2. 备份当前账户信息（使用统一的智能备份函数）
     println!("💾 步骤2: 尝试备份当前账户信息");
 
-
     let backup_info = {
         // 获取邮箱
         if let Some(app_data) = crate::platform::get_antigravity_db_path() {
@@ -110,9 +111,11 @@ pub async fn backup_and_restart_antigravity() -> Result<String, String> {
                             // 解析并提取邮箱
                             match serde_json::from_str::<serde_json::Value>(&auth_str) {
                                 Ok(auth_data) => {
-                                    if let Some(email) = auth_data.get("email").and_then(|v| v.as_str()) {
+                                    if let Some(email) =
+                                        auth_data.get("email").and_then(|v| v.as_str())
+                                    {
                                         println!("📧 获取到的邮箱: {}", email);
-                                        
+
                                         // 尝试备份
                                         match crate::antigravity::backup::smart_backup_antigravity_account(email) {
                                             Ok((backup_name, is_overwrite)) => {

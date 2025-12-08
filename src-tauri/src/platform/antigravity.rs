@@ -12,7 +12,6 @@ pub fn get_antigravity_db_path() -> Option<PathBuf> {
     get_antigravity_data_dir().map(|dir| dir.join("state.vscdb"))
 }
 
-
 /// 检查Antigravity是否安装并运行
 pub fn is_antigravity_available() -> bool {
     get_antigravity_db_path()

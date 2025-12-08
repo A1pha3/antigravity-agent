@@ -1,15 +1,14 @@
 import React, {useEffect, useState} from 'react';
-import {AlertCircle, Check, FileCode, Info, Monitor, Settings, VolumeX} from 'lucide-react';
+import {FileCode, Monitor, Settings, VolumeX} from 'lucide-react';
 import {open} from '@tauri-apps/plugin-dialog';
 import {getVersion} from '@tauri-apps/api/app';
-import {AntigravityPathService} from '../../services/antigravity-path-service';
-import {BaseDialog, BaseDialogContent, BaseDialogHeader, BaseDialogTitle,} from '@/components/base-ui/BaseDialog';
 import {BaseButton} from '@/components/base-ui/BaseButton';
-import {BaseSpinner} from '@/components/base-ui/BaseSpinner';
-import {SystemTrayService} from '../../services/system-tray-service';
-import {SilentStartService} from '../../services/silent-start-service';
 import {cn} from '@/utils/utils';
 import {logger} from '@/utils/logger';
+import {PlatformCommands} from "@/commands/PlatformCommands.ts";
+import {Modal} from "antd";
+import {SettingsCommands} from "@/commands/SettingsCommands.ts";
+import {TrayCommands} from "@/commands/TrayCommands.ts";
 
 interface BusinessSettingsDialogProps {
   isOpen: boolean;
@@ -22,9 +21,6 @@ const BusinessSettingsDialog: React.FC<BusinessSettingsDialogProps> = ({
 }) => {
   const [dataPath, setDataPath] = useState<string>('');
   const [execPath, setExecPath] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState<string>('');
-  const [messageType, setMessageType] = useState<'success' | 'error' | 'warning' | 'info'>('info');
   const [appVersion, setAppVersion] = useState<string>('');
 
   
@@ -46,50 +42,29 @@ const BusinessSettingsDialog: React.FC<BusinessSettingsDialogProps> = ({
   }, [isOpen]);
 
   const loadAppVersion = async () => {
-    try {
-      const version = await getVersion();
-      setAppVersion(version);
-    } catch (error) {
-      logger.error('获取版本号失败', {
-        module: 'SettingsDialog',
-        action: 'get_version_failed',
-        error: error instanceof Error ? error.message : String(error)
-      });
-    }
+    const version = await getVersion();
+    setAppVersion(version);
   };
 
   const loadCurrentPaths = async () => {
-    setIsLoading(true);
-    try {
-      const paths = await AntigravityPathService.getCurrentPaths();
-      let finalExecPath = paths.executablePath;
+    const paths = await PlatformCommands.getCurrentPaths();
+    let finalExecPath = paths.executablePath;
 
-      if (!finalExecPath) {
-        const detectedExec = await AntigravityPathService.detectExecutable();
-        if (detectedExec.found && detectedExec.path) {
-          finalExecPath = detectedExec.path + ' (自动检测)';
-        }
+    if (!finalExecPath) {
+      const detectedExec = await PlatformCommands.detectExecutable();
+      if (detectedExec.found && detectedExec.path) {
+        finalExecPath = detectedExec.path + ' (自动检测)';
       }
-
-      setDataPath('自动检测');
-      setExecPath(finalExecPath || '未设置');
-    } catch (error) {
-      logger.error('加载路径失败', {
-        module: 'SettingsDialog',
-        action: 'load_paths_failed',
-        error: error instanceof Error ? error.message : String(error)
-      });
-      setDataPath('自动检测');
-      setExecPath('加载失败');
-    } finally {
-      setIsLoading(false);
     }
+
+    setDataPath('自动检测');
+    setExecPath(finalExecPath || '未设置');
   };
 
   
   const loadSystemTraySettings = async () => {
     try {
-      const trayEnabled = await SystemTrayService.getSystemTrayState();
+      const trayEnabled = await TrayCommands.isEnabled();
       setIsSystemTrayEnabled(trayEnabled);
     } catch (error) {
       logger.error('加载系统托盘设置失败', {
@@ -103,39 +78,38 @@ const BusinessSettingsDialog: React.FC<BusinessSettingsDialogProps> = ({
 
   const handleSystemTrayToggle = async () => {
     setIsTrayLoading(true);
-    try {
-      const result = await SystemTrayService.toggleSystemTray();
-      setIsSystemTrayEnabled(result.enabled);
-      showMessage(result.message, result.enabled ? 'success' : 'info');
-    } catch (error) {
-      showMessage(`系统托盘切换失败: ${error}`, 'error');
-    } finally {
-      setIsTrayLoading(false);
+    const result = await TrayCommands.toggle();
+    setIsSystemTrayEnabled(result.enabled);
+    setIsTrayLoading(false);
+    if (!result.enabled && isSilentStartEnabled) {
+      await handleSilentStartToggle();
     }
   };
 
   const loadSilentStartSettings = async () => {
     try {
-      const silentStartEnabled = await SilentStartService.getSilentStartState();
+      const silentStartEnabled = await SettingsCommands.isSilentStartEnabled();
       setIsSilentStartEnabled(silentStartEnabled);
     } catch (error) {
-      logger.error('加载静默启动设置失败', {
-        module: 'SettingsDialog',
-        action: 'load_silent_start_settings_failed',
-        error: error instanceof Error ? error.message : String(error)
-      });
       setIsSilentStartEnabled(false);
     }
   };
 
-  const handleSilentStartToggle = async (enabled: boolean) => {
+  const handleSilentStartToggle = async () => {
+    if (!isSystemTrayEnabled) {
+      await handleSystemTrayToggle();
+    }
+
     setIsSilentStartLoading(true);
     try {
-      const result = await SilentStartService.setSilentStartEnabled(enabled);
-      setIsSilentStartEnabled(result.enabled);
-      showMessage(result.message, result.enabled ? 'success' : 'info');
+      const result = await SettingsCommands.saveSilentStartState(!isSilentStartEnabled);
+      setIsSilentStartEnabled(result);
     } catch (error) {
-      showMessage(`静默启动切换失败: ${error}`, 'error');
+      console.log('切换静默启动状态失败', {
+        module: 'SettingsDialog',
+        action: 'toggle_silent_start_failed',
+        error: error instanceof Error ? error.message : String(error)
+      });
     } finally {
       setIsSilentStartLoading(false);
     }
@@ -155,131 +129,82 @@ const BusinessSettingsDialog: React.FC<BusinessSettingsDialogProps> = ({
       });
 
       if (result && typeof result === 'string') {
-        const valid = await AntigravityPathService.validateExecutable(result);
+        const valid = await PlatformCommands.validateExecutable(result);
         if (valid) {
-          await AntigravityPathService.saveExecutable(result);
+          await PlatformCommands.saveExecutable(result);
           setExecPath(result);
-          showMessage('可执行文件路径已更新', 'success');
         } else {
-          showMessage('无效的可执行文件', 'warning');
         }
       }
     } catch (error) {
-      showMessage(`选择失败: ${error}`, 'error');
-    }
-  };
-
-  const showMessage = (msg: string, type: 'success' | 'error' | 'warning' | 'info') => {
-    setMessage(msg);
-    setMessageType(type);
-    setTimeout(() => setMessage(''), 3000);
-  };
-
-  const getMessageIcon = () => {
-    switch (messageType) {
-      case 'success': return <Check className="h-3.5 w-3.5" />;
-      case 'error': return <AlertCircle className="h-3.5 w-3.5" />;
-      case 'warning': return <AlertCircle className="h-3.5 w-3.5" />;
-      default: return <Info className="h-3.5 w-3.5" />;
-    }
-  };
-
-  const getMessageColorClasses = () => {
-    switch (messageType) {
-      case 'success': return 'bg-green-50 text-green-700 border-green-100 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800';
-      case 'error': return 'bg-red-50 text-red-700 border-red-100 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800';
-      case 'warning': return 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800';
-      default: return 'bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800';
     }
   };
 
   return (
-    <BaseDialog open={isOpen} onOpenChange={onOpenChange}>
-      <BaseDialogContent className="max-w-md p-0 overflow-hidden bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 shadow-2xl">
-        <BaseDialogHeader className="px-5 py-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50">
-          <BaseDialogTitle className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-            <Settings className="h-4 w-4 text-gray-500" />
-            <span>设置</span>
-            {appVersion && (
-              <span className="ml-1 text-xs font-mono text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full font-normal">
-                v{appVersion}
-              </span>
-            )}
-          </BaseDialogTitle>
-        </BaseDialogHeader>
-
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-12">
-            <BaseSpinner size="default" />
-            <p className="text-gray-400 mt-3 text-xs">加载中...</p>
-          </div>
-        ) : (
-          <div className="p-5 space-y-6">
-            {/* 消息提示 - 浮动式 */}
-            {message && (
-              <div className={cn(
-                "absolute top-16 left-1/2 -translate-x-1/2 z-10",
-                "flex items-center gap-2 px-3 py-1.5 rounded-full shadow-lg border text-xs font-medium animate-in fade-in slide-in-from-top-2",
-                getMessageColorClasses()
-              )}>
-                {getMessageIcon()}
-                {message}
-              </div>
-            )}
-
-            {/* 路径设置组 */}
-            <div className="space-y-4">
-              <div className="space-y-3">
-                <div className="group">
-                  <label className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1.5 block px-1">可执行文件</label>
-                  <div className="flex gap-2">
-                    <div className="flex-1 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-md px-3 py-2 text-xs font-mono text-gray-600 dark:text-gray-400 break-all select-all transition-colors group-hover:border-gray-300 dark:group-hover:border-gray-700">
-                      {execPath}
-                    </div>
-                    <BaseButton
-                      variant="outline"
-                      size="icon"
-                      className="h-[34px] w-[34px] shrink-0 border-gray-200 dark:border-gray-800"
-                      onClick={handleBrowseExecPath}
-                      title="选择可执行文件"
-                    >
-                      <FileCode className="h-4 w-4 text-gray-500" />
-                    </BaseButton>
-                  </div>
+    <Modal
+      open={isOpen}
+      footer={null}
+      onCancel={() => onOpenChange(false)}
+      title={<div className={"flex flex-row items-center gap-1.5"}>
+        <Settings className="h-4 w-4 text-gray-500"/>
+        <span>设置</span>
+        <span
+          className="ml-1 text-xs font-mono text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full font-normal">
+          v{appVersion}
+        </span>
+      </div>
+      }
+    >
+      <div className="p-5 space-y-6">
+        {/* 路径设置组 */}
+        <div className="space-y-4">
+          <div className="space-y-3">
+            <div className="group">
+              <label
+                className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1.5 block px-1">Antigravity
+                可执行文件</label>
+              <div className="flex gap-2">
+                <div
+                  className="flex-1 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-md px-3 py-2 text-xs font-mono text-gray-600 dark:text-gray-400 break-all select-all transition-colors group-hover:border-gray-300 dark:group-hover:border-gray-700">
+                  {execPath}
                 </div>
-              </div>
-            </div>
-
-            <div className="h-px bg-gray-100 dark:bg-gray-800" />
-
-            {/* 功能开关组 */}
-            <div className="space-y-3">
-              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-1">功能选项</h3>
-
-              <div className="space-y-1">
-                <SettingToggle
-                  icon={<Monitor className="h-4 w-4 text-blue-500" />}
-                  title="系统托盘"
-                  description="关闭窗口时最小化到托盘"
-                  checked={isSystemTrayEnabled}
-                  onChange={handleSystemTrayToggle}
-                  isLoading={isTrayLoading}
-                />
-
-                <SettingToggle
-                  icon={<VolumeX className="h-4 w-4 text-purple-500" />}
-                  title="静默启动"
-                  description="启动时自动隐藏主窗口"
-                  checked={isSilentStartEnabled}
-                  onChange={() => handleSilentStartToggle(!isSilentStartEnabled)}
-                  isLoading={isSilentStartLoading}
-                />
+                <BaseButton
+                  variant="outline"
+                  size="icon"
+                  className="h-[34px] w-[34px] shrink-0 border-gray-200 dark:border-gray-800"
+                  onClick={handleBrowseExecPath}
+                  title="Antigravity 可执行文件"
+                >
+                  <FileCode className="h-4 w-4 text-gray-500"/>
+                </BaseButton>
               </div>
             </div>
           </div>
-        )}
-      </BaseDialogContent>
-    </BaseDialog>
+        </div>
+
+        <div className="h-px bg-gray-100 dark:bg-gray-800"/>
+
+        <div className="space-y-1">
+          <SettingToggle
+            icon={<Monitor className="h-4 w-4 text-blue-500"/>}
+            title="系统托盘"
+            description="关闭窗口时最小化到托盘"
+            checked={isSystemTrayEnabled}
+            onChange={handleSystemTrayToggle}
+            isLoading={isTrayLoading}
+          />
+
+          <SettingToggle
+            icon={<VolumeX className="h-4 w-4 text-purple-500"/>}
+            title="静默启动"
+            description="启动时自动隐藏主窗口"
+            checked={isSilentStartEnabled}
+            onChange={handleSilentStartToggle}
+            isLoading={isSilentStartLoading}
+          />
+        </div>
+      </div>
+    </Modal>
   );
 };
 
