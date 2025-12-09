@@ -122,8 +122,13 @@ export function AppContent() {
             <div className="flex flex-row gap-2 p-2">
               {antigravityAccount.accounts.map((user) => {
                 const model = availableModels.data[user.api_key]
-                let geminiQuota = model?.models["gemini-3-pro-high"].quotaInfo.remainingFraction || -1
-                let claudeQuota = model?.models["claude-sonnet-4-5"].quotaInfo.remainingFraction || -1
+                let geminiQuota = -1
+                let claudeQuota = -1
+
+                if (model) {
+                  geminiQuota = model.models["gemini-3-pro-high"]?.quotaInfo?.remainingFraction ?? 0
+                  claudeQuota = model.models["claude-sonnet-4-5"]?.quotaInfo?.remainingFraction ?? 0
+                }
 
                 return <AccountSessionListCard
                   geminiQuota={geminiQuota}
