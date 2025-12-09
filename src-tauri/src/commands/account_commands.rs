@@ -553,7 +553,7 @@ pub async fn switch_to_antigravity_account(account_name: String) -> Result<Strin
     })
 }
 
-/// 直接从 Antigravity 数据库读取用户状态（不需要 CSRF token）
+/// 从 Antigravity 数据库读取用户状态
 /// 返回 userStatusProtoBinaryBase64 字段，用于解析配额信息
 #[tauri::command]
 #[instrument]

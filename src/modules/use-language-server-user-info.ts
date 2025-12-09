@@ -106,7 +106,7 @@ export const useLanguageServerUserInfo = create<State & Actions>((setState, getS
    * 获取指定账户的配额数据（从备份文件）
    */
   fetchData: async (antigravityAccount: AntigravityAccount) => {
-    // 优先使用本地 protobuf 数据（不需要 CSRF token）
+    // 使用本地 protobuf 数据
     if (antigravityAccount.user_status_proto) {
       try {
         const data = buildResponseFromProto(

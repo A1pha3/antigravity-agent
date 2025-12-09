@@ -1,6 +1,6 @@
 /**
  * 数据库直接读取命令
- * 用于绕过 CSRF token 限制，直接从 Antigravity 数据库读取数据
+ * 从 Antigravity 数据库读取用户状态数据
  */
 
 import { invoke } from '@tauri-apps/api/core';
@@ -20,7 +20,7 @@ export interface AuthStatusFromDb {
  */
 export class DbCommands {
   /**
-   * 直接从 Antigravity 数据库读取用户状态（不需要 CSRF token）
+   * 从 Antigravity 数据库读取用户状态
    * @returns 认证状态信息，包含 userStatusProtoBinaryBase64
    */
   static async getUserStatusFromDb(): Promise<AuthStatusFromDb> {
