@@ -2,6 +2,7 @@ import React from 'react';
 import {motion} from 'framer-motion';
 import {cn} from "@/utils/utils.ts";
 import {Button, Space} from "antd";
+import {BaseTooltip} from "@/components/base-ui/BaseTooltip";
 
 interface UserSessionCardProps {
   nickName: string;
@@ -11,6 +12,8 @@ interface UserSessionCardProps {
   geminiQuota: number | -1;
   // 0-1
   claudeQuota: number | -1;
+  geminiResetTime?: string;
+  claudeResetTime?: string;
   // current
   isCurrentUser: boolean;
   onSelect: () => void
@@ -62,12 +65,14 @@ export function AccountSessionListCard(props: UserSessionCardProps) {
               percentage={-1}
               color="bg-blue-400"
               trackColor="bg-blue-50"
+              resetTime={props.geminiResetTime}
             />
             <UsageItem
               label="Claude"
               percentage={-1}
               color="bg-violet-400"
               trackColor="bg-violet-50"
+              resetTime={props.claudeResetTime}
             />
           </div>
 
@@ -77,12 +82,14 @@ export function AccountSessionListCard(props: UserSessionCardProps) {
               percentage={props.geminiQuota}
               color="bg-blue-400"
               trackColor="bg-blue-50"
+              resetTime={props.geminiResetTime}
             />
             <UsageItem
               label="Claude"
               percentage={props.claudeQuota}
               color="bg-violet-400"
               trackColor="bg-violet-50"
+              resetTime={props.claudeResetTime}
             />
           </div>
       }
@@ -117,16 +124,34 @@ export function AccountSessionListCard(props: UserSessionCardProps) {
 }
 
 // --- 子组件：进度条 ---
-function UsageItem({label, percentage, color, trackColor}: {
+function UsageItem({label, percentage, color, trackColor, resetTime}: {
   label: string,
   percentage: number,
   color: string,
-  trackColor: string
+  trackColor: string,
+  resetTime?: string
 }) {
+
+  const LabelComponent = () => {
+    if (!resetTime) return <span className="text-slate-700 font-medium">{label}</span>;
+
+    let timeStr = resetTime;
+    try {
+      timeStr = new Date(resetTime).toLocaleString('zh-CN', {hour12: false});
+    } catch (e) {
+    }
+
+    return (
+      <BaseTooltip content={`配额重置时间: ${timeStr}`}>
+        <span className="text-slate-700 font-medium cursor-help border-b border-dotted border-slate-400">{label}</span>
+      </BaseTooltip>
+    )
+  }
+
   if (percentage === -1) {
     return <div className="group">
       <div className="flex justify-between mb-2 text-sm">
-        <span className="text-slate-700 font-medium">{label}</span>
+        <LabelComponent/>
         <span className="text-slate-400 font-mono tabular-nums">Unknown</span>
       </div>
       <div className={cn("h-2.5 w-full rounded-full overflow-hidden", trackColor)}>
@@ -145,7 +170,7 @@ function UsageItem({label, percentage, color, trackColor}: {
   return (
     <div className="group">
       <div className="flex justify-between mb-2 text-sm">
-        <span className="text-slate-700 font-medium">{label}</span>
+        <LabelComponent/>
         <span className="text-slate-400 font-mono tabular-nums">{percentage}%</span>
       </div>
       <div className={cn("h-2.5 w-full rounded-full overflow-hidden", trackColor)}>

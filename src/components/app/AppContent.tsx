@@ -3,6 +3,7 @@ import type {AntigravityAccount} from "@/commands/types/account.types.ts";
 import BusinessUserDetail from "@/components/business/AccountDetailModal.tsx";
 import {useAntigravityAccount, useCurrentAntigravityAccount} from "@/modules/use-antigravity-account.ts";
 import {useAvailableModels} from "@/modules/use-available-models.ts";
+import {useLanguageServerUserInfo} from "@/modules/use-language-server-user-info.ts";
 import {useTrayMenu} from "@/hooks/useTrayMenu.ts";
 
 import BusinessConfirmDialog from "@/components/business/ConfirmDialog.tsx";
@@ -16,6 +17,7 @@ export function AppContent() {
   const [selectedUser, setSelectedUser] = useState<AntigravityAccount | null>(null);
   const antigravityAccount = useAntigravityAccount();
   const availableModels = useAvailableModels();
+  const languageServerUserInfo = useLanguageServerUserInfo();
   const currentAntigravityAccount = useCurrentAntigravityAccount();
   const appGlobalLoader = useAppGlobalLoader();
 
@@ -52,6 +54,7 @@ export function AppContent() {
     antigravityAccount.updateCurrentAccount()
     antigravityAccount.accounts.forEach(user => {
       availableModels.fetchData(user)
+      languageServerUserInfo.fetchData(user)
     })
   }, [antigravityAccount.accounts]);
 
@@ -122,17 +125,47 @@ export function AppContent() {
             <div className="flex flex-row gap-2 p-2">
               {antigravityAccount.accounts.map((user) => {
                 const model = availableModels.data[user.api_key]
+                const offlineModel = languageServerUserInfo.users[user.id]
+
                 let geminiQuota = -1
                 let claudeQuota = -1
+                let geminiResetTime: string | undefined
+                let claudeResetTime: string | undefined
 
                 if (model) {
                   geminiQuota = model.models["gemini-3-pro-high"]?.quotaInfo?.remainingFraction ?? 0
+                  geminiResetTime = model.models["gemini-3-pro-high"]?.quotaInfo?.resetTime
+
                   claudeQuota = model.models["claude-sonnet-4-5"]?.quotaInfo?.remainingFraction ?? 0
+                  claudeResetTime = model.models["claude-sonnet-4-5"]?.quotaInfo?.resetTime
+                }
+
+                // Fallback to offline data if online data is not available
+                if (geminiQuota === -1 && offlineModel) {
+                  const gemini = offlineModel.userStatus.cascadeModelConfigData.clientModelConfigs.find(
+                    m => m.label === "Gemini 3 Pro (High)" || m.modelOrAlias?.model === "gemini-3-pro-high"
+                  );
+                  if (gemini) {
+                    geminiQuota = gemini.quotaInfo.remainingFraction;
+                    geminiResetTime = gemini.quotaInfo.resetTime;
+                  }
+                }
+
+                if (claudeQuota === -1 && offlineModel) {
+                  const claude = offlineModel.userStatus.cascadeModelConfigData.clientModelConfigs.find(
+                    m => m.label === "Claude Sonnet 4.5" || m.modelOrAlias?.model === "claude-sonnet-4-5"
+                  );
+                  if (claude) {
+                    claudeQuota = claude.quotaInfo.remainingFraction;
+                    claudeResetTime = claude.quotaInfo.resetTime;
+                  }
                 }
 
                 return <AccountSessionListCard
                   geminiQuota={geminiQuota}
                   claudeQuota={claudeQuota}
+                  geminiResetTime={geminiResetTime}
+                  claudeResetTime={claudeResetTime}
                   key={user.id}
                   isCurrentUser={currentAntigravityAccount?.id === user.id}
                   email={maskEmail(user.email)}
