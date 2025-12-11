@@ -51,12 +51,25 @@ pub async fn switch_antigravity_account(
         // 记录数据库操作
     crate::utils::tracing_config::log_database_operation("连接数据库", Some("ItemTable"), true);
 
-        // 这里应该加载并更新账户信息
-        // 由于状态管理的复杂性，我们先返回成功信息
+        // 调用 switch_to_antigravity_account 来执行实际的切换逻辑
+        // 这个逻辑包括：关闭进程 -> 恢复数据 -> 重启进程
+        // 注意：这里使用的是 account_id，但 switch_to_antigravity_account 期望的是 account_name (即 email)
+        // 在前端调用 switch_antigravity_account 时，传入的 account_id 实际上是 email (AccountSessionListCard.tsx: handleSwitchAccount)
+        // 为了保险起见，如果 account_id 以 "account_" 开头，我们尝试去掉它
+        let account_name = if account_id.starts_with("account_") {
+            account_id.trim_start_matches("account_").to_string()
+        } else {
+            account_id.clone()
+        };
+
+        tracing::info!(target: "account::switch_legacy", original_id = %account_id, resolved_name = %account_name, "解析账户名称");
+
+        let switch_result = switch_to_antigravity_account(account_name).await?;
+
         Ok(format!(
-            "已切换到账户: {} (数据库: {})",
+            "已切换到账户: {} (详情: {})",
             account_id,
-            app_data.display()
+            switch_result
         ))
   }.await;
 
