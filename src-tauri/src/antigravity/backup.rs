@@ -9,7 +9,7 @@ use std::path::Path;
 
 use crate::constants::database;
 use crate::path_utils::AppPaths;
-use crate::utils::crypto::{encrypt_machine_data, decrypt_machine_data, secure_write_file, secure_create_dir, is_encrypted};
+use crate::utils::crypto::{encrypt_machine_data, decrypt_machine_data, secure_write_file, secure_create_dir, secure_delete_file, is_encrypted};
 
 /// 智能备份 Antigravity 账户（终极版 - 保存完整 Marker）
 ///
@@ -120,10 +120,10 @@ pub fn smart_backup_antigravity_account(email: &str) -> Result<(String, bool), S
     // 删除旧的明文备份文件（如果存在）
     let legacy_file = config_dir.join(format!("{}.json", backup_name));
     if legacy_file.exists() {
-        if let Err(e) = fs::remove_file(&legacy_file) {
+        if let Err(e) = secure_delete_file(&legacy_file) {
             tracing::warn!(target: "backup::database", error = %e, "删除旧明文备份失败");
         } else {
-            tracing::info!(target: "backup::database", "已删除旧明文备份文件");
+            tracing::info!(target: "backup::database", "已安全删除旧明文备份文件");
         }
     }
 

@@ -13,6 +13,7 @@ use rand::RngCore;
 use sha2::{Digest, Sha256};
 use std::fs;
 use std::path::Path;
+use std::io::{Seek, Write};
 use zeroize::Zeroizing;
 
 /// 加密错误类型
@@ -450,6 +451,51 @@ pub fn secure_create_dir(path: &Path) -> Result<(), CryptoError> {
     Ok(())
 }
 
+/// 安全删除文件
+/// 执行 DoD 5220.22-M 标准的三次覆写 + 一次零覆写，然后删除文件
+pub fn secure_delete_file(path: &Path) -> Result<(), CryptoError> {
+    if !path.exists() {
+        return Ok(());
+    }
+
+    let metadata = fs::metadata(path).map_err(|e| CryptoError::IoError(e.to_string()))?;
+    if !metadata.is_file() {
+        return Err(CryptoError::IoError("路径不是文件".to_string()));
+    }
+    
+    let len = metadata.len() as usize;
+    if len == 0 {
+        return fs::remove_file(path).map_err(|e| CryptoError::IoError(e.to_string()));
+    }
+
+    let mut file = fs::OpenOptions::new()
+        .write(true)
+        .open(path)
+        .map_err(|e| CryptoError::IoError(e.to_string()))?;
+
+    // 1. 覆写三次随机数据
+    let mut rng = OsRng;
+    let mut buffer = vec![0u8; len];
+    
+    for _ in 0..3 {
+        rng.fill_bytes(&mut buffer);
+        file.seek(std::io::SeekFrom::Start(0)).map_err(|e| CryptoError::IoError(e.to_string()))?;
+        file.write_all(&buffer).map_err(|e| CryptoError::IoError(e.to_string()))?;
+        file.sync_data().map_err(|e| CryptoError::IoError(e.to_string()))?;
+    }
+
+    // 2. 覆写一次全零
+    buffer.fill(0);
+    file.seek(std::io::SeekFrom::Start(0)).map_err(|e| CryptoError::IoError(e.to_string()))?;
+    file.write_all(&buffer).map_err(|e| CryptoError::IoError(e.to_string()))?;
+    file.sync_data().map_err(|e| CryptoError::IoError(e.to_string()))?;
+
+    // 3. 删除文件
+    drop(file); // 关闭文件句柄
+    fs::remove_file(path).map_err(|e| CryptoError::IoError(e.to_string()))?;
+
+    Ok(())
+}
 
 #[cfg(test)]
 mod tests {
@@ -549,6 +595,22 @@ mod tests {
             let decrypted = decrypt_machine_data(&encrypted_v1).unwrap();
             assert_eq!(plaintext.to_vec(), decrypted);
         }
+    }
+
+    #[test]
+    fn test_secure_delete() {
+        let temp_dir = std::env::temp_dir();
+        let test_file = temp_dir.join("antigravity_secure_delete_test.txt");
+        
+        // 创建文件
+        fs::write(&test_file, b"Sensitive data that needs to be deleted").unwrap();
+        assert!(test_file.exists());
+        
+        // 安全删除
+        secure_delete_file(&test_file).unwrap();
+        
+        // 验证文件不存在
+        assert!(!test_file.exists());
     }
 }
 
