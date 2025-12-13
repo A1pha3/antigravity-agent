@@ -9,7 +9,7 @@ use std::path::Path;
 
 use crate::constants::database;
 use crate::path_utils::AppPaths;
-use crate::utils::crypto::{derive_machine_key, encrypt_data, decrypt_data, secure_write_file, secure_create_dir, is_encrypted};
+use crate::utils::crypto::{encrypt_machine_data, decrypt_machine_data, secure_write_file, secure_create_dir, is_encrypted};
 
 /// 智能备份 Antigravity 账户（终极版 - 保存完整 Marker）
 ///
@@ -70,43 +70,6 @@ pub fn smart_backup_antigravity_account(email: &str) -> Result<(String, bool), S
         }
     }
 
-    // 1.5. 提取所有通知相关字段（避免历史通知重复弹窗）
-    // tracing::debug!(target: "backup::database", "检查通知相关字段");
-    // let notification_keys: Vec<String> = conn
-    //     .prepare("SELECT key FROM ItemTable WHERE key LIKE 'antigravity.notification.%'")
-    //     .map_err(|e| e.to_string())?
-    //     .query_map([], |row| row.get(0))
-    //     .map_err(|e| e.to_string())?
-    //     .collect::<Result<Vec<String>, _>>()
-    //     .map_err(|e| e.to_string())?;
-    //
-    // if !notification_keys.is_empty() {
-    //     tracing::debug!(target: "backup::database", notification_count = %notification_keys.len(), "发现通知字段，开始备份");
-    //     for notification_key in &notification_keys {
-    //         let val: Option<String> = conn
-    //             .query_row(
-    //                 "SELECT value FROM ItemTable WHERE key = ?",
-    //                 [notification_key],
-    //                 |row| row.get(0),
-    //             )
-    //             .optional()
-    //             .unwrap_or(None);
-    //
-    //         if let Some(v) = val {
-    //             tracing::debug!(target: "backup::database", key = %notification_key, "备份通知字段");
-    //             data_map.insert(notification_key.clone(), Value::String(v));
-    //         }
-    //     }
-    //
-    //     // 保存通知字段列表到元数据中，方便恢复时使用
-    //     data_map.insert(
-    //         "notification_keys".to_string(),
-    //         Value::Array(notification_keys.into_iter().map(Value::String).collect()),
-    //     );
-    // } else {
-    //     tracing::debug!(target: "backup::database", "未发现通知字段");
-    // }
-
     // 2. 提取并解析 Marker（作为恢复时的参考书）
     let marker_json: Option<String> = conn
         .query_row(
@@ -122,9 +85,14 @@ pub fn smart_backup_antigravity_account(email: &str) -> Result<(String, bool), S
 
     if let Some(m) = marker_json {
         // 将 Marker 解析为对象存入备份
-        if let Ok(parsed_marker) = serde_json::from_str::<Value>(&m) {
-            tracing::debug!(target: "backup::database", "备份完整 Marker（作为恢复参考）");
-            data_map.insert(database::TARGET_STORAGE_MARKER.to_string(), parsed_marker);
+        match serde_json::from_str::<Value>(&m) {
+            Ok(parsed_marker) => {
+                tracing::debug!(target: "backup::database", "备份完整 Marker（作为恢复参考）");
+                data_map.insert(database::TARGET_STORAGE_MARKER.to_string(), parsed_marker);
+            },
+            Err(e) => {
+                tracing::warn!(target: "backup::database", error = %e, "Marker JSON 解析失败，跳过该字段");
+            }
         }
     }
 
@@ -142,9 +110,8 @@ pub fn smart_backup_antigravity_account(email: &str) -> Result<(String, bool), S
     let backup_file = config_dir.join(format!("{}.enc", backup_name));
     let file_content = serde_json::to_string_pretty(&data_map).map_err(|e| e.to_string())?;
     
-    // 派生机器密钥并加密
-    let machine_key = derive_machine_key().map_err(|e| e.to_string())?;
-    let encrypted_content = encrypt_data(file_content.as_bytes(), &machine_key)
+    // 派生机器密钥并加密 (自动使用 Argon2 V2)
+    let encrypted_content = encrypt_machine_data(file_content.as_bytes())
         .map_err(|e| format!("加密失败: {}", e))?;
     
     // 使用安全方式写入文件（设置 0600 权限）
@@ -168,7 +135,7 @@ pub fn smart_backup_antigravity_account(email: &str) -> Result<(String, bool), S
 /// 读取备份文件（支持加密和明文格式）
 /// 
 /// 自动检测文件格式：
-/// - .enc 文件：使用机器密钥解密
+/// - .enc 文件：使用机器密钥解密（自动支持 V1 SHA-256 和 V2 Argon2）
 /// - .json 文件：直接读取（兼容旧版本）
 pub fn read_backup_file(backup_path: &Path) -> Result<Value, String> {
     let content = fs::read(backup_path)
@@ -177,9 +144,10 @@ pub fn read_backup_file(backup_path: &Path) -> Result<Value, String> {
     // 检查是否为加密文件
     if is_encrypted(&content) {
         tracing::debug!(target: "backup::read", "检测到加密备份文件，正在解密");
-        let machine_key = derive_machine_key().map_err(|e| e.to_string())?;
-        let decrypted = decrypt_data(&content, &machine_key)
+        
+        let decrypted = decrypt_machine_data(&content)
             .map_err(|e| format!("解密失败: {}", e))?;
+            
         let json_str = String::from_utf8(decrypted)
             .map_err(|e| format!("UTF-8 解码失败: {}", e))?;
         serde_json::from_str(&json_str)
