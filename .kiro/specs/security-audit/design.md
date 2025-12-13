@@ -18,6 +18,187 @@
 3. 建立持续的安全监控和审计机制
 4. 确保符合行业安全标准
 
+## 代码审查发现的具体修复方案
+
+### V-001: 机器密钥派生增强
+
+**当前代码** (`src-tauri/src/utils/crypto.rs:45-56`):
+```rust
+pub fn derive_machine_key() -> Result<[u8; 32], CryptoError> {
+    let machine_id = get_machine_id();
+    let username = whoami::username();
+    let app_salt = "antigravity-agent-v1";
+    let combined = format!("{}:{}:{}", machine_id, username, app_salt);
+    
+    // 仅使用 SHA-256，缺少 KDF 增强
+    let mut hasher = Sha256::new();
+    hasher.update(combined.as_bytes());
+    let result = hasher.finalize();
+    // ...
+}
+```
+
+**修复方案**:
+```rust
+pub fn derive_machine_key() -> Result<[u8; 32], CryptoError> {
+    let machine_id = get_machine_id()?; // 返回 Result，不使用默认值
+    let username = whoami::username();
+    let app_salt = "antigravity-agent-v2"; // 版本升级
+    let combined = format!("{}:{}:{}", machine_id, username, app_salt);
+    
+    // 第一步：SHA-256 预处理
+    let mut hasher = Sha256::new();
+    hasher.update(combined.as_bytes());
+    let pre_key = hasher.finalize();
+    
+    // 第二步：Argon2id 密钥派生
+    let argon2 = Argon2::new(
+        argon2::Algorithm::Argon2id,
+        argon2::Version::V0x13,
+        argon2::Params::new(19456, 2, 1, Some(32)).unwrap()
+    );
+    
+    let salt = SaltString::encode_b64(&pre_key[..16]).unwrap();
+    let password_hash = argon2.hash_password(&pre_key, &salt)?;
+    
+    let mut key = [0u8; 32];
+    key.copy_from_slice(password_hash.hash.unwrap().as_bytes());
+    Ok(key)
+}
+```
+
+### V-002: 移除默认机器 ID
+
+**当前代码** (`src-tauri/src/utils/crypto.rs:170-195`):
+```rust
+fn get_machine_id() -> String {
+    // ...
+    .unwrap_or_else(|| "default-mac-id".to_string())  // 危险！
+}
+```
+
+**修复方案**:
+```rust
+fn get_machine_id() -> Result<String, CryptoError> {
+    #[cfg(target_os = "macos")]
+    {
+        std::process::Command::new("ioreg")
+            .args(["-rd1", "-c", "IOPlatformExpertDevice"])
+            .output()
+            .ok()
+            .and_then(|output| {
+                let stdout = String::from_utf8_lossy(&output.stdout);
+                stdout.lines()
+                    .find(|line| line.contains("IOPlatformUUID"))
+                    .and_then(|line| line.split('"').nth(3).map(|s| s.to_string()))
+            })
+            .ok_or_else(|| CryptoError::KeyDerivationFailed(
+                "无法获取机器 ID，请确保系统权限正确".to_string()
+            ))
+    }
+    // 其他平台类似处理...
+}
+```
+
+### V-003: 密码强度验证
+
+**新增函数**:
+```rust
+pub fn validate_password_strength(password: &str) -> Result<(), CryptoError> {
+    if password.len() < 12 {
+        return Err(CryptoError::InvalidData("密码长度至少 12 个字符".to_string()));
+    }
+    
+    let has_upper = password.chars().any(|c| c.is_uppercase());
+    let has_lower = password.chars().any(|c| c.is_lowercase());
+    let has_digit = password.chars().any(|c| c.is_ascii_digit());
+    let has_special = password.chars().any(|c| !c.is_alphanumeric());
+    
+    if !has_upper || !has_lower || !has_digit || !has_special {
+        return Err(CryptoError::InvalidData(
+            "密码必须包含大小写字母、数字和特殊字符".to_string()
+        ));
+    }
+    
+    Ok(())
+}
+```
+
+### V-004: Windows ACL 设置
+
+**修复方案** (`src-tauri/src/utils/crypto.rs`):
+```rust
+pub fn secure_write_file(path: &Path, data: &[u8]) -> Result<(), CryptoError> {
+    fs::write(path, data).map_err(|e| CryptoError::IoError(e.to_string()))?;
+    
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let permissions = fs::Permissions::from_mode(0o600);
+        fs::set_permissions(path, permissions)?;
+    }
+    
+    #[cfg(windows)]
+    {
+        use windows_acl::acl::ACL;
+        // 获取当前用户 SID
+        let current_user = whoami::username();
+        // 设置 DACL 仅允许当前用户访问
+        let mut acl = ACL::from_file_path(path, false)?;
+        acl.all_entries().iter().for_each(|e| acl.remove(e.sid, None, None));
+        acl.allow(current_user, true, windows_acl::acl::AceFlags::OBJECT_INHERIT_ACE)?;
+        acl.apply()?;
+    }
+    
+    Ok(())
+}
+```
+
+### V-005: 敏感数据清零
+
+**新增依赖** (`Cargo.toml`):
+```toml
+zeroize = { version = "1.7", features = ["derive"] }
+```
+
+**新增模块** (`src-tauri/src/security/secure_memory.rs`):
+```rust
+use zeroize::{Zeroize, ZeroizeOnDrop};
+
+#[derive(Zeroize, ZeroizeOnDrop)]
+pub struct SecureKey([u8; 32]);
+
+impl SecureKey {
+    pub fn new(key: [u8; 32]) -> Self {
+        Self(key)
+    }
+    
+    pub fn as_bytes(&self) -> &[u8; 32] {
+        &self.0
+    }
+}
+```
+
+### V-006: SQL 参数化查询
+
+**当前代码** (`src-tauri/src/antigravity/backup.rs:85`):
+```rust
+conn.query_row(
+    &format!("SELECT value FROM ItemTable WHERE key = '{}'", database::TARGET_STORAGE_MARKER),
+    [],
+    |row| row.get(0),
+)
+```
+
+**修复方案**:
+```rust
+conn.query_row(
+    "SELECT value FROM ItemTable WHERE key = ?",
+    [database::TARGET_STORAGE_MARKER],
+    |row| row.get(0),
+)
+```
+
 ## 架构
 
 ### 安全架构分层

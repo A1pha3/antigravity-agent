@@ -14,6 +14,30 @@
 - 依赖项和供应链安全
 - 错误处理和信息泄露防护
 
+## 代码审查发现摘要（2024年12月）
+
+基于对项目代码的全面审查，发现以下安全问题需要优先处理：
+
+### 高优先级问题
+
+| ID | 问题 | 代码位置 | 影响 |
+|----|------|----------|------|
+| V-001 | 机器密钥派生仅使用 SHA-256 | `src-tauri/src/utils/crypto.rs:45-56` | 密钥强度不足 |
+| V-002 | 机器 ID 获取失败使用默认值 | `src-tauri/src/utils/crypto.rs:170-195` | 加密可被绕过 |
+| V-003 | 缺少密码强度验证 | `src-tauri/src/utils/crypto.rs` | 弱密码可被接受 |
+| V-004 | Windows 平台无 ACL 设置 | `src-tauri/src/utils/crypto.rs:199-213` | 文件权限不安全 |
+| V-005 | 敏感数据未使用 zeroize | 全局 | 内存中残留敏感数据 |
+
+### 中优先级问题
+
+| ID | 问题 | 代码位置 | 影响 |
+|----|------|----------|------|
+| V-006 | SQL 使用字符串格式化 | `src-tauri/src/antigravity/backup.rs:85` | SQL 注入风险 |
+| V-007 | LogSanitizer 未全局使用 | 多处日志调用 | 敏感信息泄露 |
+| V-008 | 缺少统一输入验证 | 全局 | 注入攻击风险 |
+| V-009 | 备份文件无 HMAC 签名 | `src-tauri/src/antigravity/backup.rs` | 数据完整性无保证 |
+| V-010 | 错误消息包含敏感路径 | 多处错误处理 | 信息泄露 |
+
 ## 术语表
 
 - **System**: Antigravity Agent 应用程序

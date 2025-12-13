@@ -1,5 +1,37 @@
 # 安全审计与加固实施计划
 
+## 代码审查发现的安全问题
+
+### 高优先级问题（立即修复）
+
+| 问题 | 位置 | 描述 | 风险等级 |
+|------|------|------|----------|
+| 机器密钥派生弱 | `src-tauri/src/utils/crypto.rs:45-56` | `derive_machine_key()` 仅使用 SHA-256，缺少 Argon2 KDF 增强 | 🔴 高 |
+| 默认机器 ID | `src-tauri/src/utils/crypto.rs:170-195` | 机器 ID 获取失败时使用 "default-*-id"，严重削弱加密 | 🔴 高 |
+| 缺少密码强度验证 | `src-tauri/src/utils/crypto.rs` | 导入/导出功能没有强制密码复杂度要求 | 🔴 高 |
+| Windows ACL 缺失 | `src-tauri/src/utils/crypto.rs:199-213` | `secure_write_file()` 仅在 Unix 上设置权限 | 🔴 高 |
+| 敏感数据未清零 | 全局 | 密钥和密码在内存中可能残留，未使用 zeroize | 🔴 高 |
+
+### 中优先级问题（1-2周内修复）
+
+| 问题 | 位置 | 描述 | 风险等级 |
+|------|------|------|----------|
+| SQL 字符串格式化 | `src-tauri/src/antigravity/backup.rs:85` | 部分 SQL 使用 format! 而非参数化查询 | 🟡 中 |
+| 日志敏感信息 | 多处 | `LogSanitizer` 未在所有日志点使用 | 🟡 中 |
+| 缺少输入验证 | 全局 | 文件路径、邮箱等输入未统一验证 | 🟡 中 |
+| 备份无完整性验证 | `src-tauri/src/antigravity/backup.rs` | 备份文件缺少 HMAC 签名 | 🟡 中 |
+| 错误信息泄露 | 多处 | 错误消息可能包含敏感路径信息 | 🟡 中 |
+
+### 低优先级问题（持续改进）
+
+| 问题 | 位置 | 描述 | 风险等级 |
+|------|------|------|----------|
+| 缺少安全删除 | 全局 | 删除敏感文件时未覆写内容 | 🟢 低 |
+| 依赖项审计 | `Cargo.toml`, `package.json` | 未配置自动化漏洞扫描 | 🟢 低 |
+| 缺少审计日志 | 全局 | 安全相关操作未记录审计日志 | 🟢 低 |
+
+---
+
 ## 任务列表
 
 - [ ] 1. 建立安全基础设施
@@ -12,6 +44,7 @@
   - 创建 `src-tauri/src/security/` 目录
   - 定义核心安全类型和错误类型
   - 创建 `SecurityConfig` 结构体
+  - 添加 `zeroize` crate 到 Cargo.toml
   - _需求: 所有需求的基础_
 
 - [ ] 1.2 实施安全配置管理
@@ -34,10 +67,11 @@
   - _需求: 1.1-1.7_
 
 - [ ] 2.1 实施增强的密钥派生
-  - 创建 `EnhancedCryptoManager` 模块
-  - 实现 `derive_machine_key_secure()` 使用 Argon2id
-  - 配置 Argon2 参数（内存 19MB, 时间 2, 并行 1）
-  - 添加性能基准测试
+  - 修改 `src-tauri/src/utils/crypto.rs` 中的 `derive_machine_key()` 函数
+  - 在 SHA-256 哈希后添加 Argon2id 密钥派生
+  - 配置 Argon2 参数（内存 19456KB, 时间 2, 并行 1）
+  - 保持向后兼容性（支持旧格式解密）
+  - 具体修改位置: `crypto.rs:45-56`
   - _需求: 1.2, 1.4_
 
 - [ ]* 2.2 编写密钥派生属性测试
@@ -45,10 +79,11 @@
   - **验证: 需求 1.1**
 
 - [ ] 2.3 实施密码强度验证
-  - 创建 `validate_password_strength()` 函数
+  - 在 `src-tauri/src/utils/crypto.rs` 中添加 `validate_password_strength()` 函数
   - 实现长度检查（最小 12 字符）
   - 实现复杂度检查（大小写、数字、特殊字符）
-  - 添加密码强度评分系统
+  - 在 `encrypt_with_password()` 调用前验证密码
+  - 在前端 `use-import-export-accounts.ts` 中添加密码验证 UI
   - _需求: 1.5_
 
 - [ ]* 2.4 编写密码验证属性测试
@@ -56,10 +91,11 @@
   - **验证: 需求 1.5**
 
 - [ ] 2.5 实施敏感数据清零
-  - 添加 `zeroize` crate 依赖
-  - 创建 `SecureMemory<T>` 包装类型
-  - 实现 `Drop` trait 自动清零
-  - 更新所有敏感数据使用 `SecureMemory`
+  - 在 `Cargo.toml` 中添加 `zeroize = { version = "1.7", features = ["derive"] }`
+  - 创建 `src-tauri/src/security/secure_memory.rs` 模块
+  - 实现 `SecureMemory<T>` 包装类型，使用 `Zeroize` trait
+  - 更新 `crypto.rs` 中的密钥变量使用 `SecureMemory`
+  - 更新 `backup.rs` 和 `restore.rs` 中的敏感数据处理
   - _需求: 1.7, 2.8, 4.3_
 
 - [ ]* 2.6 编写内存清零属性测试
@@ -67,9 +103,11 @@
   - **验证: 需求 2.8, 4.3**
 
 - [ ] 2.7 修复机器 ID 失败处理
-  - 移除 `get_machine_id()` 中的默认值回退
-  - 返回明确的错误而不是使用 "default-*-id"
-  - 添加错误处理和用户提示
+  - 修改 `src-tauri/src/utils/crypto.rs:170-195` 中的 `get_machine_id()` 函数
+  - 移除所有 `unwrap_or_else(|| "default-*-id".to_string())` 回退
+  - 返回 `Result<String, CryptoError>` 而不是 `String`
+  - 更新 `derive_machine_key()` 以传播错误
+  - 在 UI 中显示友好的错误提示
   - _需求: 1.3_
 
 - [ ]* 2.8 编写机器 ID 失败测试
@@ -84,14 +122,16 @@
   - _需求: 2.1-2.8, 6.1-6.7_
 
 - [ ] 3.1 创建安全存储管理器
-  - 创建 `SecureStorageManager` 模块
+  - 创建 `src-tauri/src/security/secure_storage.rs` 模块
+  - 实现 `SecureStorageManager` 结构体
   - 实现 `secure_write()` 跨平台文件写入
   - 实现 `secure_create_dir()` 跨平台目录创建
   - _需求: 2.3, 2.4, 2.5_
 
 - [ ] 3.2 实施 Unix 文件权限设置
-  - 在 `secure_write()` 中设置 0600 权限
-  - 在 `secure_create_dir()` 中设置 0700 权限
+  - 现有代码 `crypto.rs:199-213` 已实现 Unix 权限
+  - 验证 `secure_write_file()` 设置 0600 权限
+  - 验证 `secure_create_dir()` 设置 0700 权限
   - 添加权限验证函数 `verify_permissions()`
   - _需求: 2.3, 2.4, 6.1, 6.2_
 
@@ -101,9 +141,11 @@
   - **验证: 需求 2.3, 2.4**
 
 - [ ] 3.4 实施 Windows ACL 设置
-  - 使用 Windows API 设置文件 DACL
-  - 限制访问权限为当前用户
-  - 添加 Windows 权限验证
+  - 在 `Cargo.toml` 中添加 `windows-acl = "0.3"` 依赖（仅 Windows）
+  - 修改 `src-tauri/src/utils/crypto.rs` 中的 `secure_write_file()` 函数
+  - 添加 `#[cfg(windows)]` 条件编译块
+  - 使用 `SetSecurityInfo` API 设置文件 DACL
+  - 限制访问权限为当前用户（GENERIC_READ | GENERIC_WRITE）
   - _需求: 2.5, 6.3_
 
 - [ ]* 3.5 编写 Windows ACL 测试
@@ -112,9 +154,12 @@
   - _需求: 2.5_
 
 - [ ] 3.6 实施安全删除功能
-  - 创建 `secure_delete()` 函数
+  - 在 `src-tauri/src/security/secure_storage.rs` 中创建 `secure_delete()` 函数
   - 实现多次覆写（3 次随机数据 + 1 次零）
-  - 添加删除验证
+  - 使用 `std::fs::OpenOptions` 以写入模式打开文件
+  - 调用 `fsync()` 确保数据写入磁盘
+  - 最后调用 `std::fs::remove_file()` 删除文件
+  - 更新 `backup_commands.rs` 中的 `delete_backup()` 使用安全删除
   - _需求: 2.7_
 
 - [ ]* 3.7 编写安全删除属性测试
@@ -122,9 +167,10 @@
   - **验证: 需求 2.7**
 
 - [ ] 3.8 实施 Nonce 唯一性验证
-  - 在 `encrypt_data()` 中添加 Nonce 跟踪
-  - 实现 Nonce 碰撞检测
-  - 添加 Nonce 生成统计
+  - 当前 `encrypt_data()` 使用 `OsRng.fill_bytes()` 生成随机 Nonce
+  - 添加 Nonce 碰撞检测（使用 HashSet 跟踪最近 1000 个 Nonce）
+  - 如果检测到碰撞，重新生成 Nonce
+  - 添加日志记录 Nonce 生成统计
   - _需求: 2.2_
 
 - [ ]* 3.9 编写 Nonce 唯一性属性测试
